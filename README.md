@@ -9,7 +9,7 @@ defer ft_lib.deinit();
 const font = ft_lib.loadFont("C:\\Windows\\Fonts\\arialbd.ttf") orelse @panic("Failed to load font");
 defer font.deinit();
 
-const ascii = msdfatlasgen.Charset.ascii() oresle @panic("Failed to create ASCII charset");
+const ascii = msdfatlasgen.Charset.ascii() orelse @panic("Failed to create ASCII charset");
 defer ascii.deinit();
 
 // ascii.add(codepoint);
