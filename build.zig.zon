@@ -51,6 +51,7 @@
         "msdfgen.h",
         "msdfgen-c.h",
         "msdfgen-ext.h",
+        "msdfgen-ext-c.h",
         "msdf-atlas-gen",
         // For example...
         //"LICENSE",
