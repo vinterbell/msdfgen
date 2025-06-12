@@ -1,6 +1,91 @@
 # MSDFGen with c bindings, zig build system, and atlas generation
 
+Example (packing glyphs into an atlas, getting the bitmap of the sdf, and glyph quads):
+```zig
+const ft_lib = msdfgen.FreetypeHandle.init() orelse @panic("Failed to initialize FreeType");
+defer ft_lib.deinit();
 
+// also a corresponding loadFontData function without a file
+const font = ft_lib.loadFont("C:\\Windows\\Fonts\\arialbd.ttf") orelse @panic("Failed to load font");
+defer font.deinit();
+
+const ascii = msdfatlasgen.Charset.ascii() oresle @panic("Failed to create ASCII charset");
+defer ascii.deinit();
+
+// ascii.add(codepoint);
+
+const geometry = msdfatlasgen.FontGeometry.init() orelse @panic("Failed to initialize font geometry");
+defer geometry.deinit();
+
+//                                                    scale
+const loaded_glyph_count = geometry.loadCharset(font, 1.0,  ascii);
+if (loaded_glyph_count == 0) {
+    @panic("Failed to load any glyphs from the font");
+}
+
+// like a slice but limited in what you can access
+const glyphs: msdfatlasgen.GlyphRange = font_geometry.getGlyphs();
+for (0..glyphs.count) |i| {
+    glyphs.setEdgeColoring(i, .by_distance, 3.0, 0);
+}
+
+const packer = msdfatlasgen.Packer.init() orelse @panic("Failed to initialize packer");
+defer packer.deinit();
+
+
+const padding = 1;
+packer.setDimensionsConstraint(.square);
+packer.setMinimumScale(24.0);
+packer.setPixelRange(-1.0, 1.0);
+packer.setMiterLimit(1.0);
+packer.setDimensions(@intCast(width), @intCast(height));
+packer.setOuterPixelPadding(padding, padding, padding, padding);
+
+// TODO: maybe change the signature to have a bool instead
+const pack_res = packer.pack(glyphs);
+if (pack_res != 0) {
+    @panic("Failed to pack glyphs into atlas");
+}
+
+const width = 1024;
+const height = 1024;
+const generator = msdfatlasgen.ImmediateAtlasGenerator.init(width, height) orelse @panic("Failed to initialize atlas generator");
+defer generator.deinit();
+
+generator.setThreadCount(4);
+generator.generate(glyphs);
+
+// 3 component float bitmap for MSDF
+const bitmap = generator.getBitmap();
+// []const f32
+const bitmap_slice = bitmap.slice();
+
+const glyph_quads: []GlyphQuad = ...;
+/// Represents a glyph quad in the font atlas.
+pub const GlyphQuad = struct {
+    top_left_texture: [2]u32 = .{ 0, 0 },
+    bottom_right_texture: [2]u32 = .{ 0, 0 },
+    x_offset: [2]f64 = .{ 0, 0 },
+    y_offset: [2]f64 = .{ 0, 0 },
+    advance: f32 = 0,
+};
+for (0..glyphs.count) |i| {
+    const advance = glyphs.getAdvance(i);
+    const box = glyphs.getBoxRect(i);
+    const bounds = glyphs.getQuadPlaneBounds(i);
+    const quad: *GlyphQuad = &glyph_quads[i];
+    quad.advance = advance;
+    quad.x_offset = .{ bounds.left, bounds.right };
+    quad.y_offset = .{ bounds.bottom, bounds.top };
+    if (box.w == 0 or box.h == 0) {
+        quad.top_left_texture = .{ 0, 0 };
+        quad.bottom_right_texture = .{ 0, 0 };
+        continue; // skip empty glyphs
+    }
+    quad.top_left_texture = .{ box.x + 1, box.y + 1 };
+    quad.bottom_right_texture = .{ box.x + box.w - 1, box.y + box.h - 1 };
+}
+```
 
 # Original README.md
 # Multi-channel signed distance field generator
