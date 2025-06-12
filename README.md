@@ -1,3 +1,8 @@
+# MSDFGen with c bindings, zig build system, and atlas generation
+
+
+
+# Original README.md
 # Multi-channel signed distance field generator
 
 This is a utility for generating signed distance fields from vector shapes and font glyphs,
