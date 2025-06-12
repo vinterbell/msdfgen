@@ -37,7 +37,8 @@
     // internet connectivity.
     .dependencies = .{
         .freetype = .{
-            .path = "../freetype",
+            .url = "git+https://github.com/lodinukal/freetype.git#1d4946b13b7a788165c682c02012d32fed70184f",
+            .hash = "freetype-2.13.3-AAAAAAPJZADAV2ax6GtgQU7K-N5Yg6H0nW90Yz-A3RBM",
         },
     },
     .paths = .{
