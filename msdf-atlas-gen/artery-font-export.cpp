@@ -38,7 +38,7 @@ static artery_font::CodepointType convertCodepointType(GlyphIdentifierType glyph
 }
 
 template <typename T, int N>
-static bool encodeTiff(std::vector<byte> &output, const msdfgen::BitmapConstRef<T, N> &atlas) {
+static bool encodeTiff(std::vector<byte, Allocator<byte>> &output, const msdfgen::BitmapConstRef<T, N> &atlas) {
     // TODO
     return false;
 }
@@ -109,7 +109,7 @@ bool exportArteryFont(const FontGeometry *fonts, int fontCount, const msdfgen::B
                     kernPair.codepoint1 = elem.first.first;
                     kernPair.codepoint2 = elem.first.second;
                     kernPair.advance.h = REAL(elem.second);
-                    ((std::vector<artery_font::KernPair<REAL> > &) fontVariant.kernPairs).push_back((artery_font::KernPair<REAL> &&) kernPair);
+                    ((std::vector<artery_font::KernPair<REAL>, Allocator<artery_font::KernPair<REAL>>> &) fontVariant.kernPairs).push_back((artery_font::KernPair<REAL> &&) kernPair);
                 }
                 break;
             case GlyphIdentifierType::UNICODE_CODEPOINT:
@@ -121,7 +121,7 @@ bool exportArteryFont(const FontGeometry *fonts, int fontCount, const msdfgen::B
                         kernPair.codepoint1 = glyph1->getCodepoint();
                         kernPair.codepoint2 = glyph2->getCodepoint();
                         kernPair.advance.h = REAL(elem.second);
-                        ((std::vector<artery_font::KernPair<REAL> > &) fontVariant.kernPairs).push_back((artery_font::KernPair<REAL> &&) kernPair);
+                        ((std::vector<artery_font::KernPair<REAL>, Allocator<artery_font::KernPair<REAL>>> &) fontVariant.kernPairs).push_back((artery_font::KernPair<REAL> &&) kernPair);
                     }
                 }
                 break;
@@ -140,14 +140,14 @@ bool exportArteryFont(const FontGeometry *fonts, int fontCount, const msdfgen::B
             case ImageFormat::PNG:
                 image.encoding = artery_font::IMAGE_PNG;
                 image.pixelFormat = artery_font::PIXEL_UNSIGNED8;
-                if (!encodePng((std::vector<byte> &) image.data, atlas))
+                if (!encodePng((std::vector<byte, Allocator<byte>> &) image.data, atlas))
                     return false;
                 break;
         #endif
             case ImageFormat::TIFF:
                 image.encoding = artery_font::IMAGE_TIFF;
                 image.pixelFormat = artery_font::PIXEL_FLOAT32;
-                if (!encodeTiff((std::vector<byte> &) image.data, atlas))
+                if (!encodeTiff((std::vector<byte, Allocator<byte>> &) image.data, atlas))
                     return false;
                 break;
             case ImageFormat::BINARY:

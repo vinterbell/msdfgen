@@ -32,7 +32,7 @@ static void boundPoint(double &l, double &b, double &r, double &t, Point2 p) {
 }
 
 void Contour::bound(double &l, double &b, double &r, double &t) const {
-    for (std::vector<EdgeHolder>::const_iterator edge = edges.begin(); edge != edges.end(); ++edge)
+    for (std::vector<EdgeHolder, Allocator<EdgeHolder>>::const_iterator edge = edges.begin(); edge != edges.end(); ++edge)
         (*edge)->bound(l, b, r, t);
 }
 
@@ -40,7 +40,7 @@ void Contour::boundMiters(double &l, double &b, double &r, double &t, double bor
     if (edges.empty())
         return;
     Vector2 prevDir = edges.back()->direction(1).normalize(true);
-    for (std::vector<EdgeHolder>::const_iterator edge = edges.begin(); edge != edges.end(); ++edge) {
+    for (std::vector<EdgeHolder, Allocator<EdgeHolder>>::const_iterator edge = edges.begin(); edge != edges.end(); ++edge) {
         Vector2 dir = -(*edge)->direction(0).normalize(true);
         if (polarity*crossProduct(prevDir, dir) >= 0) {
             double miterLength = miterLimit;
@@ -71,7 +71,7 @@ int Contour::winding() const {
         total += shoelace(d, a);
     } else {
         Point2 prev = edges.back()->point(0);
-        for (std::vector<EdgeHolder>::const_iterator edge = edges.begin(); edge != edges.end(); ++edge) {
+        for (std::vector<EdgeHolder, Allocator<EdgeHolder>>::const_iterator edge = edges.begin(); edge != edges.end(); ++edge) {
             Point2 cur = (*edge)->point(0);
             total += shoelace(prev, cur);
             prev = cur;
@@ -83,7 +83,7 @@ int Contour::winding() const {
 void Contour::reverse() {
     for (int i = (int) edges.size()/2; i > 0; --i)
         EdgeHolder::swap(edges[i-1], edges[edges.size()-i]);
-    for (std::vector<EdgeHolder>::iterator edge = edges.begin(); edge != edges.end(); ++edge)
+    for (std::vector<EdgeHolder, Allocator<EdgeHolder>>::iterator edge = edges.begin(); edge != edges.end(); ++edge)
         (*edge)->reverse();
 }
 

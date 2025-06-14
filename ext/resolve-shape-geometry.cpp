@@ -21,11 +21,11 @@ Point2 pointFromSkiaPoint(const SkPoint p) {
 }
 
 void shapeToSkiaPath(SkPath &skPath, const Shape &shape) {
-    for (std::vector<Contour>::const_iterator contour = shape.contours.begin(); contour != shape.contours.end(); ++contour) {
+    for (std::vector<Contour, Allocator<Contour>>::const_iterator contour = shape.contours.begin(); contour != shape.contours.end(); ++contour) {
         if (!contour->edges.empty()) {
             const EdgeSegment *edge = contour->edges.back();
             skPath.moveTo(pointToSkiaPoint(*edge->controlPoints()));
-            for (std::vector<EdgeHolder>::const_iterator nextEdge = contour->edges.begin(); nextEdge != contour->edges.end(); edge = *nextEdge++) {
+            for (std::vector<EdgeHolder, Allocator<EdgeHolder>>::const_iterator nextEdge = contour->edges.begin(); nextEdge != contour->edges.end(); edge = *nextEdge++) {
                 const Point2 *p = edge->controlPoints();
                 switch (edge->type()) {
                     case (int) LinearSegment::EDGE_TYPE:

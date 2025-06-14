@@ -1,5 +1,6 @@
 
 #include "Workload.h"
+#include "types.h"
 
 #include <vector>
 #include <thread>
@@ -28,7 +29,7 @@ bool Workload::finishParallel(int threadCount) {
                 result = false;
         }
     };
-    std::vector<std::thread> threads;
+    std::vector<std::thread, Allocator<std::thread>> threads;
     threads.reserve(threadCount);
     for (int i = 0; i < threadCount; ++i)
         threads.emplace_back(threadWorker, i);

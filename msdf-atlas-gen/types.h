@@ -2,8 +2,12 @@
 #pragma once
 
 #include <cstdint>
+#include "msdfgen.h"
 
 namespace msdf_atlas {
+
+template <typename T>
+using Allocator = msdfgen::Allocator<T>; 
 
 typedef unsigned char byte;
 typedef uint32_t unicode_t;

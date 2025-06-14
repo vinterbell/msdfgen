@@ -22,7 +22,7 @@ class FreetypeHandle {
     friend FontHandle *loadFontData(FreetypeHandle *library, const byte *data, int length);
 #ifndef MSDFGEN_DISABLE_VARIABLE_FONTS
     friend bool setFontVariationAxis(FreetypeHandle *library, FontHandle *font, const char *name, double coordinate);
-    friend bool listFontVariationAxes(std::vector<FontVariationAxis> &axes, FreetypeHandle *library, FontHandle *font);
+    friend bool listFontVariationAxes(std::vector<FontVariationAxis, Allocator<FontVariationAxis>> &axes, FreetypeHandle *library, FontHandle *font);
 #endif
 
     FT_Library library;
@@ -44,7 +44,7 @@ class FontHandle {
     friend bool getKerning(double &output, FontHandle *font, unicode_t unicode0, unicode_t unicode1, FontCoordinateScaling coordinateScaling);
 #ifndef MSDFGEN_DISABLE_VARIABLE_FONTS
     friend bool setFontVariationAxis(FreetypeHandle *library, FontHandle *font, const char *name, double coordinate);
-    friend bool listFontVariationAxes(std::vector<FontVariationAxis> &axes, FreetypeHandle *library, FontHandle *font);
+    friend bool listFontVariationAxes(std::vector<FontVariationAxis, Allocator<FontVariationAxis>> &axes, FreetypeHandle *library, FontHandle *font);
 #endif
 
     FT_Face face;
@@ -120,10 +120,10 @@ unsigned GlyphIndex::getIndex() const {
 }
 
 FreetypeHandle *initializeFreetype() {
-    FreetypeHandle *handle = new FreetypeHandle;
+    FreetypeHandle *handle = make<FreetypeHandle>();
     FT_Error error = FT_Init_FreeType(&handle->library);
     if (error) {
-        delete handle;
+        destroy(handle);
         return NULL;
     }
     return handle;
@@ -131,11 +131,11 @@ FreetypeHandle *initializeFreetype() {
 
 void deinitializeFreetype(FreetypeHandle *library) {
     FT_Done_FreeType(library->library);
-    delete library;
+    destroy(library);
 }
 
 FontHandle *adoptFreetypeFont(FT_Face ftFace) {
-    FontHandle *handle = new FontHandle;
+    FontHandle *handle = make<FontHandle>();
     handle->face = ftFace;
     handle->ownership = false;
     return handle;
@@ -163,10 +163,10 @@ FT_Error readFreetypeOutline(Shape &output, FT_Outline *outline, double scale) {
 FontHandle *loadFont(FreetypeHandle *library, const char *filename) {
     if (!library)
         return NULL;
-    FontHandle *handle = new FontHandle;
+    FontHandle *handle = make<FontHandle>();
     FT_Error error = FT_New_Face(library->library, filename, 0, &handle->face);
     if (error) {
-        delete handle;
+        destroy(handle);
         return NULL;
     }
     handle->ownership = true;
@@ -176,10 +176,10 @@ FontHandle *loadFont(FreetypeHandle *library, const char *filename) {
 FontHandle *loadFontData(FreetypeHandle *library, const byte *data, int length) {
     if (!library)
         return NULL;
-    FontHandle *handle = new FontHandle;
+    FontHandle *handle = make<FontHandle>();
     FT_Error error = FT_New_Memory_Face(library->library, data, length, 0, &handle->face);
     if (error) {
-        delete handle;
+        destroy(handle);
         return NULL;
     }
     handle->ownership = true;
@@ -273,7 +273,7 @@ bool setFontVariationAxis(FreetypeHandle *library, FontHandle *font, const char 
         if (FT_Get_MM_Var(font->face, &master))
             return false;
         if (master && master->num_axis) {
-            std::vector<FT_Fixed> coords(master->num_axis);
+            std::vector<FT_Fixed, Allocator<FT_Fixed>> coords(master->num_axis);
             if (!FT_Get_Var_Design_Coordinates(font->face, FT_UInt(coords.size()), &coords[0])) {
                 for (FT_UInt i = 0; i < master->num_axis; ++i) {
                     if (!strcmp(name, master->axis[i].name)) {
@@ -291,7 +291,7 @@ bool setFontVariationAxis(FreetypeHandle *library, FontHandle *font, const char 
     return success;
 }
 
-bool listFontVariationAxes(std::vector<FontVariationAxis> &axes, FreetypeHandle *library, FontHandle *font) {
+bool listFontVariationAxes(std::vector<FontVariationAxis, Allocator<FontVariationAxis>> &axes, FreetypeHandle *library, FontHandle *font) {
     if (font->face->face_flags&FT_FACE_FLAG_MULTIPLE_MASTERS) {
         FT_MM_Var *master = NULL;
         if (FT_Get_MM_Var(font->face, &master))

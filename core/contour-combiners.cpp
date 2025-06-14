@@ -57,7 +57,7 @@ template class SimpleContourCombiner<MultiAndTrueDistanceSelector>;
 template <class EdgeSelector>
 OverlappingContourCombiner<EdgeSelector>::OverlappingContourCombiner(const Shape &shape) {
     windings.reserve(shape.contours.size());
-    for (std::vector<Contour>::const_iterator contour = shape.contours.begin(); contour != shape.contours.end(); ++contour)
+    for (std::vector<Contour, Allocator<Contour>>::const_iterator contour = shape.contours.begin(); contour != shape.contours.end(); ++contour)
         windings.push_back(contour->winding());
     edgeSelectors.resize(shape.contours.size());
 }
@@ -65,7 +65,7 @@ OverlappingContourCombiner<EdgeSelector>::OverlappingContourCombiner(const Shape
 template <class EdgeSelector>
 void OverlappingContourCombiner<EdgeSelector>::reset(const Point2 &p) {
     this->p = p;
-    for (typename std::vector<EdgeSelector>::iterator contourEdgeSelector = edgeSelectors.begin(); contourEdgeSelector != edgeSelectors.end(); ++contourEdgeSelector)
+    for (typename std::vector<EdgeSelector, Allocator<EdgeSelector>>::iterator contourEdgeSelector = edgeSelectors.begin(); contourEdgeSelector != edgeSelectors.end(); ++contourEdgeSelector)
         contourEdgeSelector->reset(p);
 }
 

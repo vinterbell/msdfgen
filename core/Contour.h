@@ -11,7 +11,7 @@ class Contour {
 
 public:
     /// The sequence of edges that make up the contour.
-    std::vector<EdgeHolder> edges;
+    std::vector<EdgeHolder, Allocator<EdgeHolder>> edges;
 
     /// Adds an edge to the contour.
     void addEdge(const EdgeHolder &edge);

@@ -11,18 +11,24 @@ Bitmap<T, N>::Bitmap() : pixels(NULL), w(0), h(0) { }
 
 template <typename T, int N>
 Bitmap<T, N>::Bitmap(int width, int height) : w(width), h(height) {
-    pixels = new T[N*w*h];
+    // pixels = new T[N*w*h];
+    Allocator<T> allocator;
+    pixels = (T *) allocator.allocate(N*w*h);
 }
 
 template <typename T, int N>
 Bitmap<T, N>::Bitmap(const BitmapConstRef<T, N> &orig) : w(orig.width), h(orig.height) {
-    pixels = new T[N*w*h];
+    // pixels = new T[N*w*h];
+    Allocator<T> allocator;
+    pixels = (T *) allocator.allocate(N*w*h);
     memcpy(pixels, orig.pixels, sizeof(T)*N*w*h);
 }
 
 template <typename T, int N>
 Bitmap<T, N>::Bitmap(const Bitmap<T, N> &orig) : w(orig.w), h(orig.h) {
-    pixels = new T[N*w*h];
+    // pixels = new T[N*w*h];
+    Allocator<T> allocator;
+    pixels = (T *) allocator.allocate(N*w*h);
     memcpy(pixels, orig.pixels, sizeof(T)*N*w*h);
 }
 
@@ -36,15 +42,20 @@ Bitmap<T, N>::Bitmap(Bitmap<T, N> &&orig) : pixels(orig.pixels), w(orig.w), h(or
 
 template <typename T, int N>
 Bitmap<T, N>::~Bitmap() {
-    delete [] pixels;
+    // delete [] pixels;
+    Allocator<T> allocator;
+    allocator.deallocate(pixels, N*w*h);
 }
 
 template <typename T, int N>
 Bitmap<T, N> &Bitmap<T, N>::operator=(const BitmapConstRef<T, N> &orig) {
     if (pixels != orig.pixels) {
-        delete [] pixels;
+        Allocator<T> allocator;
+        // delete [] pixels;
+        allocator.deallocate(pixels, N*w*h);
         w = orig.width, h = orig.height;
-        pixels = new T[N*w*h];
+        // pixels = new T[N*w*h];
+        pixels = (T *) allocator.allocate(N*w*h);
         memcpy(pixels, orig.pixels, sizeof(T)*N*w*h);
     }
     return *this;
@@ -53,9 +64,12 @@ Bitmap<T, N> &Bitmap<T, N>::operator=(const BitmapConstRef<T, N> &orig) {
 template <typename T, int N>
 Bitmap<T, N> &Bitmap<T, N>::operator=(const Bitmap<T, N> &orig) {
     if (this != &orig) {
-        delete [] pixels;
+        Allocator<T> allocator;
+        // delete [] pixels;
+        allocator.deallocate(pixels, N*w*h);
         w = orig.w, h = orig.h;
-        pixels = new T[N*w*h];
+        // pixels = new T[N*w*h];
+        pixels = (T *) allocator.allocate(N*w*h);
         memcpy(pixels, orig.pixels, sizeof(T)*N*w*h);
     }
     return *this;
@@ -65,7 +79,9 @@ Bitmap<T, N> &Bitmap<T, N>::operator=(const Bitmap<T, N> &orig) {
 template <typename T, int N>
 Bitmap<T, N> &Bitmap<T, N>::operator=(Bitmap<T, N> &&orig) {
     if (this != &orig) {
-        delete [] pixels;
+        Allocator<T> allocator;
+        // delete [] pixels;
+        allocator.deallocate(pixels, N*w*h);
         pixels = orig.pixels;
         w = orig.w, h = orig.h;
         orig.pixels = NULL;

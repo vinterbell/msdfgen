@@ -35,7 +35,7 @@ int packRectangles(RectangleType *rectangles, int count, int width, int height, 
 
 template <class SizeSelector, typename RectangleType>
 std::pair<int, int> packRectangles(RectangleType *rectangles, int count, int spacing) {
-    std::vector<RectangleType> rectanglesCopy(count);
+    std::vector<RectangleType, Allocator<RectangleType>> rectanglesCopy(count);
     int totalArea = 0;
     for (int i = 0; i < count; ++i) {
         rectanglesCopy[i].w = rectangles[i].w+spacing;

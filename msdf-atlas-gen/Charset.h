@@ -16,7 +16,9 @@ class Charset {
 
 public:
     /// The set of the 95 printable ASCII characters
-    static MSDF_ATLAS_PUBLIC const Charset ASCII;
+    // static MSDF_ATLAS_PUBLIC const Charset ASCII;
+
+    static MSDF_ATLAS_PUBLIC Charset ascii();
 
     /// Adds a codepoint
     void add(unicode_t cp);
@@ -25,8 +27,8 @@ public:
 
     size_t size() const;
     bool empty() const;
-    std::set<unicode_t>::const_iterator begin() const;
-    std::set<unicode_t>::const_iterator end() const;
+    std::set<unicode_t, std::less<unicode_t>, Allocator<unicode_t>>::const_iterator begin() const;
+    std::set<unicode_t, std::less<unicode_t>, Allocator<unicode_t>>::const_iterator end() const;
 
     /// Load character set from a text file with compliant syntax
     bool load(const char *filename, bool disableCharLiterals = false);
@@ -34,7 +36,7 @@ public:
     bool parse(const char *str, size_t strLength, bool disableCharLiterals = false);
 
 private:
-    std::set<unicode_t> codepoints;
+    std::set<unicode_t, std::less<unicode_t>, Allocator<unicode_t>> codepoints;
 
 };
 

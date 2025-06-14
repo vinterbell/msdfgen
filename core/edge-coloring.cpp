@@ -68,15 +68,15 @@ static void switchColor(EdgeColor &color, unsigned long long &seed, EdgeColor ba
 void edgeColoringSimple(Shape &shape, double angleThreshold, unsigned long long seed) {
     double crossThreshold = sin(angleThreshold);
     EdgeColor color = initColor(seed);
-    std::vector<int> corners;
-    for (std::vector<Contour>::iterator contour = shape.contours.begin(); contour != shape.contours.end(); ++contour) {
+    std::vector<int, Allocator<int>> corners;
+    for (std::vector<Contour, Allocator<Contour>>::iterator contour = shape.contours.begin(); contour != shape.contours.end(); ++contour) {
         if (contour->edges.empty())
             continue;
         { // Identify corners
             corners.clear();
             Vector2 prevDirection = contour->edges.back()->direction(1);
             int index = 0;
-            for (std::vector<EdgeHolder>::const_iterator edge = contour->edges.begin(); edge != contour->edges.end(); ++edge, ++index) {
+            for (std::vector<EdgeHolder, Allocator<EdgeHolder>>::const_iterator edge = contour->edges.begin(); edge != contour->edges.end(); ++edge, ++index) {
                 if (isCorner(prevDirection.normalize(), (*edge)->direction(0).normalize(), crossThreshold))
                     corners.push_back(index);
                 prevDirection = (*edge)->direction(1);
@@ -86,7 +86,7 @@ void edgeColoringSimple(Shape &shape, double angleThreshold, unsigned long long 
         // Smooth contour
         if (corners.empty()) {
             switchColor(color, seed);
-            for (std::vector<EdgeHolder>::iterator edge = contour->edges.begin(); edge != contour->edges.end(); ++edge)
+            for (std::vector<EdgeHolder, Allocator<EdgeHolder>>::iterator edge = contour->edges.begin(); edge != contour->edges.end(); ++edge)
                 (*edge)->color = color;
         }
         // "Teardrop" case
@@ -152,8 +152,8 @@ void edgeColoringInkTrap(Shape &shape, double angleThreshold, unsigned long long
     typedef EdgeColoringInkTrapCorner Corner;
     double crossThreshold = sin(angleThreshold);
     EdgeColor color = initColor(seed);
-    std::vector<Corner> corners;
-    for (std::vector<Contour>::iterator contour = shape.contours.begin(); contour != shape.contours.end(); ++contour) {
+    std::vector<Corner, Allocator<Corner>> corners;
+    for (std::vector<Contour, Allocator<Contour>>::iterator contour = shape.contours.begin(); contour != shape.contours.end(); ++contour) {
         if (contour->edges.empty())
             continue;
         double splineLength = 0;
@@ -161,7 +161,7 @@ void edgeColoringInkTrap(Shape &shape, double angleThreshold, unsigned long long
             corners.clear();
             Vector2 prevDirection = contour->edges.back()->direction(1);
             int index = 0;
-            for (std::vector<EdgeHolder>::const_iterator edge = contour->edges.begin(); edge != contour->edges.end(); ++edge, ++index) {
+            for (std::vector<EdgeHolder, Allocator<EdgeHolder>>::const_iterator edge = contour->edges.begin(); edge != contour->edges.end(); ++edge, ++index) {
                 if (isCorner(prevDirection.normalize(), (*edge)->direction(0).normalize(), crossThreshold)) {
                     Corner corner = { index, splineLength };
                     corners.push_back(corner);
@@ -175,7 +175,7 @@ void edgeColoringInkTrap(Shape &shape, double angleThreshold, unsigned long long
         // Smooth contour
         if (corners.empty()) {
             switchColor(color, seed);
-            for (std::vector<EdgeHolder>::iterator edge = contour->edges.begin(); edge != contour->edges.end(); ++edge)
+            for (std::vector<EdgeHolder, Allocator<EdgeHolder>>::iterator edge = contour->edges.begin(); edge != contour->edges.end(); ++edge)
                 (*edge)->color = color;
         }
         // "Teardrop" case
@@ -394,18 +394,18 @@ static int cmpDoublePtr(const void *a, const void *b) {
 
 void edgeColoringByDistance(Shape &shape, double angleThreshold, unsigned long long seed) {
 
-    std::vector<EdgeSegment *> edgeSegments;
-    std::vector<int> splineStarts;
+    std::vector<EdgeSegment *, Allocator<EdgeSegment *>> edgeSegments;
+    std::vector<int, Allocator<int>> splineStarts;
 
     double crossThreshold = sin(angleThreshold);
-    std::vector<int> corners;
-    for (std::vector<Contour>::iterator contour = shape.contours.begin(); contour != shape.contours.end(); ++contour)
+    std::vector<int, Allocator<int>> corners;
+    for (std::vector<Contour, Allocator<Contour>>::iterator contour = shape.contours.begin(); contour != shape.contours.end(); ++contour)
         if (!contour->edges.empty()) {
             // Identify corners
             corners.clear();
             Vector2 prevDirection = contour->edges.back()->direction(1);
             int index = 0;
-            for (std::vector<EdgeHolder>::const_iterator edge = contour->edges.begin(); edge != contour->edges.end(); ++edge, ++index) {
+            for (std::vector<EdgeHolder, Allocator<EdgeHolder>>::const_iterator edge = contour->edges.begin(); edge != contour->edges.end(); ++edge, ++index) {
                 if (isCorner(prevDirection.normalize(), (*edge)->direction(0).normalize(), crossThreshold))
                     corners.push_back(index);
                 prevDirection = (*edge)->direction(1);
@@ -414,7 +414,7 @@ void edgeColoringByDistance(Shape &shape, double angleThreshold, unsigned long l
             splineStarts.push_back((int) edgeSegments.size());
             // Smooth contour
             if (corners.empty())
-                for (std::vector<EdgeHolder>::iterator edge = contour->edges.begin(); edge != contour->edges.end(); ++edge)
+                for (std::vector<EdgeHolder, Allocator<EdgeHolder>>::iterator edge = contour->edges.begin(); edge != contour->edges.end(); ++edge)
                     edgeSegments.push_back(&**edge);
             // "Teardrop" case
             else if (corners.size() == 1) {
@@ -475,8 +475,8 @@ void edgeColoringByDistance(Shape &shape, double angleThreshold, unsigned long l
     if (!splineCount)
         return;
 
-    std::vector<double> distanceMatrixStorage(splineCount*splineCount);
-    std::vector<double *> distanceMatrix(splineCount);
+    std::vector<double, Allocator<double>> distanceMatrixStorage(splineCount*splineCount);
+    std::vector<double *, Allocator<double *>> distanceMatrix(splineCount);
     for (int i = 0; i < splineCount; ++i)
         distanceMatrix[i] = &distanceMatrixStorage[i*splineCount];
     const double *distanceMatrixBase = &distanceMatrixStorage[0];
@@ -490,7 +490,7 @@ void edgeColoringByDistance(Shape &shape, double angleThreshold, unsigned long l
         }
     }
 
-    std::vector<const double *> graphEdgeDistances;
+    std::vector<const double *, Allocator<const double *>> graphEdgeDistances;
     graphEdgeDistances.reserve(splineCount*(splineCount-1)/2);
     for (int i = 0; i < splineCount; ++i)
         for (int j = i+1; j < splineCount; ++j)
@@ -499,8 +499,8 @@ void edgeColoringByDistance(Shape &shape, double angleThreshold, unsigned long l
     if (!graphEdgeDistances.empty())
         qsort(&graphEdgeDistances[0], graphEdgeDistances.size(), sizeof(const double *), &cmpDoublePtr);
 
-    std::vector<int> edgeMatrixStorage(splineCount*splineCount);
-    std::vector<int *> edgeMatrix(splineCount);
+    std::vector<int, Allocator<int>> edgeMatrixStorage(splineCount*splineCount);
+    std::vector<int *, Allocator<int *>> edgeMatrix(splineCount);
     for (int i = 0; i < splineCount; ++i)
         edgeMatrix[i] = &edgeMatrixStorage[i*splineCount];
     int nextEdge = 0;
@@ -512,7 +512,7 @@ void edgeColoringByDistance(Shape &shape, double angleThreshold, unsigned long l
         edgeMatrix[col][row] = 1;
     }
 
-    std::vector<int> coloring(2*splineCount);
+    std::vector<int, Allocator<int>> coloring(2*splineCount);
     colorSecondDegreeGraph(&coloring[0], &edgeMatrix[0], splineCount, seed);
     for (; nextEdge < graphEdgeCount; ++nextEdge) {
         int elem = (int) (graphEdgeDistances[nextEdge]-distanceMatrixBase);

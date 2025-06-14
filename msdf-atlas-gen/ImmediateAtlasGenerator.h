@@ -32,13 +32,13 @@ public:
     /// Allows access to the underlying AtlasStorage
     const AtlasStorage &atlasStorage() const;
     /// Returns the layout of the contained glyphs as a list of GlyphBoxes
-    const std::vector<GlyphBox> &getLayout() const;
+    const std::vector<GlyphBox, Allocator<GlyphBox>> &getLayout() const;
 
 private:
     AtlasStorage storage;
-    std::vector<GlyphBox> layout;
-    std::vector<T> glyphBuffer;
-    std::vector<byte> errorCorrectionBuffer;
+    std::vector<GlyphBox, Allocator<GlyphBox>> layout;
+    std::vector<T, Allocator<T>> glyphBuffer;
+    std::vector<byte, Allocator<byte>> errorCorrectionBuffer;
     GeneratorAttributes attributes;
     int threadCount;
 

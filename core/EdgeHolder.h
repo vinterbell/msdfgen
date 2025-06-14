@@ -13,7 +13,7 @@ public:
     static void swap(EdgeHolder &a, EdgeHolder &b);
 
     inline EdgeHolder() : edgeSegment() { }
-    inline EdgeHolder(EdgeSegment *segment) : edgeSegment(segment) { }
+    inline EdgeHolder(EdgeSegment *segment) : edgeSegment(segment) {  }
     inline EdgeHolder(Point2 p0, Point2 p1, EdgeColor edgeColor = WHITE) : edgeSegment(EdgeSegment::create(p0, p1, edgeColor)) { }
     inline EdgeHolder(Point2 p0, Point2 p1, Point2 p2, EdgeColor edgeColor = WHITE) : edgeSegment(EdgeSegment::create(p0, p1, p2, edgeColor)) { }
     inline EdgeHolder(Point2 p0, Point2 p1, Point2 p2, Point2 p3, EdgeColor edgeColor = WHITE) : edgeSegment(EdgeSegment::create(p0, p1, p2, p3, edgeColor)) { }

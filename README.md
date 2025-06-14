@@ -9,12 +9,12 @@ defer ft_lib.deinit();
 const font = ft_lib.loadFont("C:\\Windows\\Fonts\\arialbd.ttf") orelse @panic("Failed to load font");
 defer font.deinit();
 
-const ascii = msdfatlasgen.Charset.ascii() orelse @panic("Failed to create ASCII charset");
+const ascii = msdfgen.Charset.ascii() orelse @panic("Failed to create ASCII charset");
 defer ascii.deinit();
 
 // ascii.add(codepoint);
 
-const geometry = msdfatlasgen.FontGeometry.init() orelse @panic("Failed to initialize font geometry");
+const geometry = msdfgen.FontGeometry.init() orelse @panic("Failed to initialize font geometry");
 defer geometry.deinit();
 
 //                                                    scale
@@ -24,12 +24,12 @@ if (loaded_glyph_count == 0) {
 }
 
 // like a slice but limited in what you can access
-const glyphs: msdfatlasgen.GlyphRange = font_geometry.getGlyphs();
+const glyphs: msdfgen.GlyphRange = font_geometry.getGlyphs();
 for (0..glyphs.count) |i| {
     glyphs.setEdgeColoring(i, .by_distance, 3.0, 0);
 }
 
-const packer = msdfatlasgen.Packer.init() orelse @panic("Failed to initialize packer");
+const packer = msdfgen.Packer.init() orelse @panic("Failed to initialize packer");
 defer packer.deinit();
 
 
@@ -49,7 +49,7 @@ if (pack_res != 0) {
 
 const width = 1024;
 const height = 1024;
-const generator = msdfatlasgen.ImmediateAtlasGenerator.init(width, height) orelse @panic("Failed to initialize atlas generator");
+const generator = msdfgen.ImmediateAtlasGenerator.init(width, height) orelse @panic("Failed to initialize atlas generator");
 defer generator.deinit();
 
 generator.setThreadCount(4);

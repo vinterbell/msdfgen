@@ -10,7 +10,10 @@ static Charset createAsciiCharset() {
     return ascii;
 }
 
-const Charset Charset::ASCII = createAsciiCharset();
+Charset Charset::ascii() {
+    static Charset ascii = createAsciiCharset();
+    return ascii;
+}
 
 void Charset::add(unicode_t cp) {
     codepoints.insert(cp);
@@ -28,11 +31,11 @@ bool Charset::empty() const {
     return codepoints.empty();
 }
 
-std::set<unicode_t>::const_iterator Charset::begin() const {
+std::set<unicode_t, std::less<unicode_t>, Allocator<unicode_t>>::const_iterator Charset::begin() const {
     return codepoints.begin();
 }
 
-std::set<unicode_t>::const_iterator Charset::end() const {
+std::set<unicode_t, std::less<unicode_t>,  Allocator<unicode_t>>::const_iterator Charset::end() const {
     return codepoints.end();
 }
 

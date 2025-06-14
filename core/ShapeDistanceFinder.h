@@ -26,7 +26,7 @@ public:
 private:
     const Shape &shape;
     ContourCombiner contourCombiner;
-    std::vector<typename ContourCombiner::EdgeSelectorType::EdgeCache> shapeEdgeCache;
+    std::vector<typename ContourCombiner::EdgeSelectorType::EdgeCache, Allocator<typename ContourCombiner::EdgeSelectorType::EdgeCache>> shapeEdgeCache;
 
 };
 

@@ -173,8 +173,8 @@ void generateSDF_legacy(const BitmapRef<float, 1> &output, const Shape &shape, R
             double dummy;
             Point2 p = Vector2(x+.5, y+.5)/scale-translate;
             SignedDistance minDistance;
-            for (std::vector<Contour>::const_iterator contour = shape.contours.begin(); contour != shape.contours.end(); ++contour)
-                for (std::vector<EdgeHolder>::const_iterator edge = contour->edges.begin(); edge != contour->edges.end(); ++edge) {
+            for (std::vector<Contour, Allocator<Contour>>::const_iterator contour = shape.contours.begin(); contour != shape.contours.end(); ++contour)
+                for (std::vector<EdgeHolder, Allocator<EdgeHolder>>::const_iterator edge = contour->edges.begin(); edge != contour->edges.end(); ++edge) {
                     SignedDistance distance = (*edge)->signedDistance(p, dummy);
                     if (distance < minDistance)
                         minDistance = distance;
@@ -196,8 +196,8 @@ void generatePSDF_legacy(const BitmapRef<float, 1> &output, const Shape &shape, 
             SignedDistance minDistance;
             const EdgeHolder *nearEdge = NULL;
             double nearParam = 0;
-            for (std::vector<Contour>::const_iterator contour = shape.contours.begin(); contour != shape.contours.end(); ++contour)
-                for (std::vector<EdgeHolder>::const_iterator edge = contour->edges.begin(); edge != contour->edges.end(); ++edge) {
+            for (std::vector<Contour, Allocator<Contour>>::const_iterator contour = shape.contours.begin(); contour != shape.contours.end(); ++contour)
+                for (std::vector<EdgeHolder, Allocator<EdgeHolder>>::const_iterator edge = contour->edges.begin(); edge != contour->edges.end(); ++edge) {
                     double param;
                     SignedDistance distance = (*edge)->signedDistance(p, param);
                     if (distance < minDistance) {
@@ -235,8 +235,8 @@ void generateMSDF_legacy(const BitmapRef<float, 3> &output, const Shape &shape, 
             r.nearEdge = g.nearEdge = b.nearEdge = NULL;
             r.nearParam = g.nearParam = b.nearParam = 0;
 
-            for (std::vector<Contour>::const_iterator contour = shape.contours.begin(); contour != shape.contours.end(); ++contour)
-                for (std::vector<EdgeHolder>::const_iterator edge = contour->edges.begin(); edge != contour->edges.end(); ++edge) {
+            for (std::vector<Contour, Allocator<Contour>>::const_iterator contour = shape.contours.begin(); contour != shape.contours.end(); ++contour)
+                for (std::vector<EdgeHolder, Allocator<EdgeHolder>>::const_iterator edge = contour->edges.begin(); edge != contour->edges.end(); ++edge) {
                     double param;
                     SignedDistance distance = (*edge)->signedDistance(p, param);
                     if ((*edge)->color&RED && distance < r.minDistance) {
@@ -291,8 +291,8 @@ void generateMTSDF_legacy(const BitmapRef<float, 4> &output, const Shape &shape,
             r.nearEdge = g.nearEdge = b.nearEdge = NULL;
             r.nearParam = g.nearParam = b.nearParam = 0;
 
-            for (std::vector<Contour>::const_iterator contour = shape.contours.begin(); contour != shape.contours.end(); ++contour)
-                for (std::vector<EdgeHolder>::const_iterator edge = contour->edges.begin(); edge != contour->edges.end(); ++edge) {
+            for (std::vector<Contour, Allocator<Contour>>::const_iterator contour = shape.contours.begin(); contour != shape.contours.end(); ++contour)
+                for (std::vector<EdgeHolder, Allocator<EdgeHolder>>::const_iterator edge = contour->edges.begin(); edge != contour->edges.end(); ++edge) {
                     double param;
                     SignedDistance distance = (*edge)->signedDistance(p, param);
                     if (distance < minDistance)

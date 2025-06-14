@@ -400,7 +400,7 @@ static double xmlGetDouble(const char *start, const char *end) {
 #define SVG_DEC_VAL() xmlDecode(valueStart, valueEnd)
 #define SVG_DOUBLEVAL() xmlGetDouble(valueStart, valueEnd)
 
-static bool readFile(std::vector<char> &output, const char *filename) {
+static bool readFile(std::vector<char, Allocator<char>> &output, const char *filename) {
     if (FILE *f = fopen(filename, "rb")) {
         struct FileGuard {
             FILE *f;
@@ -444,7 +444,7 @@ public:
     int flags;
     Vector2 dimensions;
     StrRange viewBox;
-    std::vector<StrRange> pathDefs;
+    std::vector<StrRange, Allocator<StrRange>> pathDefs;
 
     inline SvgPathAggregator() : curElement(IGNORED), ignoredDepth(0), flags(0) { }
 
@@ -504,7 +504,7 @@ public:
 };
 
 bool loadSvgShape(Shape &output, const char *filename, int pathIndex, Vector2 *dimensions) {
-    std::vector<char> svgData;
+    std::vector<char, Allocator<char>> svgData;
     if (!(readFile(svgData, filename) && !svgData.empty()))
         return false;
 
@@ -574,7 +574,7 @@ int loadSvgShape(Shape &output, Shape::Bounds &viewBox, const char *filename) {
 
 #ifdef MSDFGEN_USE_DROPXML
 int loadSvgShape(Shape &output, Shape::Bounds &viewBox, const char *filename) {
-    std::vector<char> svgData;
+    std::vector<char, Allocator<char>> svgData;
     if (!(readFile(svgData, filename) && !svgData.empty()))
         return SVG_IMPORT_FAILURE;
 
@@ -1050,7 +1050,7 @@ int parseSvgShape(Shape &output, Shape::Bounds &viewBox, const char *svgData, si
 }
 
 int loadSvgShape(Shape &output, Shape::Bounds &viewBox, const char *filename) {
-    std::vector<char> svgData;
+    std::vector<char, Allocator<char>> svgData;
     if (!readFile(svgData, filename))
         return SVG_IMPORT_FAILURE;
     return parseSvgShape(output, viewBox, svgData.empty() ? NULL : &svgData[0], svgData.size());

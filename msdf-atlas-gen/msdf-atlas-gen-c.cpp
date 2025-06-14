@@ -1,6 +1,7 @@
 #include "msdf-atlas-gen-c.h"
 
 #include "msdf-atlas-gen.h"
+#include "msdfgen.h"
 
 using namespace msdf_atlas;
 
@@ -9,12 +10,12 @@ extern "C"
     // charset
     msaCharset *msaCharsetCreate(void)
     {
-        return (msaCharset *)new Charset();
+        return (msaCharset *)msdfgen::make<Charset>();
     }
 
     msaCharset *msaCharsetASCII(void)
     {
-        Charset *ascii = new Charset();
+        Charset *ascii = msdfgen::make<Charset>();
         for (unicode_t cp = 0x20; cp < 0x7f; ++cp)
             ascii->add(cp);
         return (msaCharset *)ascii;
@@ -22,7 +23,7 @@ extern "C"
 
     void msaCharsetDestroy(msaCharset *charset)
     {
-        delete (Charset *)charset;
+        msdfgen::destroy((Charset *)charset);
     }
 
     void msaCharsetAdd(msaCharset *charset, uint32_t cp)
@@ -108,11 +109,11 @@ extern "C"
     // font geometry
     msaFontGeometry *msaFontGeometryCreate(void)
     {
-        return (msaFontGeometry *)new FontGeometry();
+        return (msaFontGeometry *)msdfgen::make<FontGeometry>();
     }
     void msaFontGeometryDestroy(msaFontGeometry *fontGeometry)
     {
-        delete (FontGeometry *)fontGeometry;
+        msdfgen::destroy((FontGeometry *)fontGeometry);
     }
 
     int msaFontGeometryLoadCharset(
@@ -137,11 +138,11 @@ extern "C"
     // packer
     msaPacker *msaPackerCreate(void)
     {
-        return (msaPacker *)new TightAtlasPacker();
+        return (msaPacker *)msdfgen::make<TightAtlasPacker>();
     }
     void msaPackerDestroy(msaPacker *packer)
     {
-        delete (TightAtlasPacker *)packer;
+        msdfgen::destroy((TightAtlasPacker *)packer);
     }
     /// returns 0 on success
     int msaPackerPack(msaPacker *packer, msaGlyphRange range)
@@ -228,12 +229,12 @@ extern "C"
     // immediate atlas generator
     msaImmediateAtlasGenerator *msaImmediateAtlasGeneratorCreate(uint32_t width, uint32_t height)
     {
-        return (msaImmediateAtlasGenerator *)new ImmediateAtGen(width, height);
+        return (msaImmediateAtlasGenerator *)msdfgen::make<ImmediateAtGen>(width, height);
     }
     void msaImmediateAtlasGeneratorDestroy(msaImmediateAtlasGenerator *generator)
     {
         ImmediateAtGen *gen = (ImmediateAtGen *)generator;
-        delete gen;
+        msdfgen::destroy(gen);
     }
     void msaImmediateAtlasGeneratorSetThreadCount(msaImmediateAtlasGenerator *generator, int threadCount)
     {

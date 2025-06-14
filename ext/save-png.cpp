@@ -59,7 +59,7 @@ static bool pngSave(const byte *pixels, int width, int height, int channels, int
     if (!file)
         return false;
     guard.setFile(file);
-    std::vector<const byte *> rows(height);
+    std::vector<const byte *, Allocator<const byte *>> rows(height);
     for (int y = 0; y < height; ++y)
         rows[y] = pixels+channels*width*(height-y-1);
     if (setjmp(png_jmpbuf(png)))
@@ -76,7 +76,7 @@ static bool pngSave(const float *pixels, int width, int height, int channels, in
     if (!(pixels && width && height))
         return false;
     int subpixels = channels*width*height;
-    std::vector<byte> bytePixels(subpixels);
+    std::vector<byte, Allocator<byte>> bytePixels(subpixels);
     for (int i = 0; i < subpixels; ++i)
         bytePixels[i] = pixelFloatToByte(pixels[i]);
     return pngSave(&bytePixels[0], width, height, channels, colorType, filename);
@@ -117,29 +117,29 @@ bool savePng(const BitmapConstRef<float, 4> &bitmap, const char *filename) {
 namespace msdfgen {
 
 bool savePng(const BitmapConstRef<byte, 1> &bitmap, const char *filename) {
-    std::vector<byte> pixels(bitmap.width*bitmap.height);
+    std::vector<byte, Allocator<byte>> pixels(bitmap.width*bitmap.height);
     for (int y = 0; y < bitmap.height; ++y)
         memcpy(&pixels[bitmap.width*y], bitmap(0, bitmap.height-y-1), bitmap.width);
     return !lodepng::encode(filename, pixels, bitmap.width, bitmap.height, LCT_GREY);
 }
 
 bool savePng(const BitmapConstRef<byte, 3> &bitmap, const char *filename) {
-    std::vector<byte> pixels(3*bitmap.width*bitmap.height);
+    std::vector<byte, Allocator<byte>> pixels(3*bitmap.width*bitmap.height);
     for (int y = 0; y < bitmap.height; ++y)
         memcpy(&pixels[3*bitmap.width*y], bitmap(0, bitmap.height-y-1), 3*bitmap.width);
     return !lodepng::encode(filename, pixels, bitmap.width, bitmap.height, LCT_RGB);
 }
 
 bool savePng(const BitmapConstRef<byte, 4> &bitmap, const char *filename) {
-    std::vector<byte> pixels(4*bitmap.width*bitmap.height);
+    std::vector<byte, Allocator<byte>> pixels(4*bitmap.width*bitmap.height);
     for (int y = 0; y < bitmap.height; ++y)
         memcpy(&pixels[4*bitmap.width*y], bitmap(0, bitmap.height-y-1), 4*bitmap.width);
     return !lodepng::encode(filename, pixels, bitmap.width, bitmap.height, LCT_RGBA);
 }
 
 bool savePng(const BitmapConstRef<float, 1> &bitmap, const char *filename) {
-    std::vector<byte> pixels(bitmap.width*bitmap.height);
-    std::vector<byte>::iterator it = pixels.begin();
+    std::vector<byte, Allocator<byte>> pixels(bitmap.width*bitmap.height);
+    std::vector<byte, Allocator<byte>>::iterator it = pixels.begin();
     for (int y = bitmap.height-1; y >= 0; --y)
         for (int x = 0; x < bitmap.width; ++x)
             *it++ = pixelFloatToByte(*bitmap(x, y));
@@ -147,8 +147,8 @@ bool savePng(const BitmapConstRef<float, 1> &bitmap, const char *filename) {
 }
 
 bool savePng(const BitmapConstRef<float, 3> &bitmap, const char *filename) {
-    std::vector<byte> pixels(3*bitmap.width*bitmap.height);
-    std::vector<byte>::iterator it = pixels.begin();
+    std::vector<byte, Allocator<byte>> pixels(3*bitmap.width*bitmap.height);
+    std::vector<byte, Allocator<byte>>::iterator it = pixels.begin();
     for (int y = bitmap.height-1; y >= 0; --y)
         for (int x = 0; x < bitmap.width; ++x) {
             *it++ = pixelFloatToByte(bitmap(x, y)[0]);
@@ -159,8 +159,8 @@ bool savePng(const BitmapConstRef<float, 3> &bitmap, const char *filename) {
 }
 
 bool savePng(const BitmapConstRef<float, 4> &bitmap, const char *filename) {
-    std::vector<byte> pixels(4*bitmap.width*bitmap.height);
-    std::vector<byte>::iterator it = pixels.begin();
+    std::vector<byte, Allocator<byte>> pixels(4*bitmap.width*bitmap.height);
+    std::vector<byte, Allocator<byte>>::iterator it = pixels.begin();
     for (int y = bitmap.height-1; y >= 0; --y)
         for (int x = 0; x < bitmap.width; ++x) {
             *it++ = pixelFloatToByte(bitmap(x, y)[0]);

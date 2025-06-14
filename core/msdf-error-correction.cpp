@@ -137,7 +137,7 @@ inline static bool detectClash(const float *a, const float *b, double threshold)
 
 template <int N>
 static void msdfErrorCorrectionInner_legacy(const BitmapRef<float, N> &output, const Vector2 &threshold) {
-    std::vector<std::pair<int, int> > clashes;
+    std::vector<std::pair<int, int>, Allocator<std::pair<int, int>>> clashes;
     int w = output.width, h = output.height;
     for (int y = 0; y < h; ++y)
         for (int x = 0; x < w; ++x) {
@@ -149,7 +149,7 @@ static void msdfErrorCorrectionInner_legacy(const BitmapRef<float, N> &output, c
             )
                 clashes.push_back(std::make_pair(x, y));
         }
-    for (std::vector<std::pair<int, int> >::const_iterator clash = clashes.begin(); clash != clashes.end(); ++clash) {
+    for (std::vector<std::pair<int, int>, Allocator<std::pair<int, int>>>::const_iterator clash = clashes.begin(); clash != clashes.end(); ++clash) {
         float *pixel = output(clash->first, clash->second);
         float med = median(pixel[0], pixel[1], pixel[2]);
         pixel[0] = med, pixel[1] = med, pixel[2] = med;
@@ -166,7 +166,7 @@ static void msdfErrorCorrectionInner_legacy(const BitmapRef<float, N> &output, c
             )
                 clashes.push_back(std::make_pair(x, y));
         }
-    for (std::vector<std::pair<int, int> >::const_iterator clash = clashes.begin(); clash != clashes.end(); ++clash) {
+    for (std::vector<std::pair<int, int>, Allocator<std::pair<int, int>>>::const_iterator clash = clashes.begin(); clash != clashes.end(); ++clash) {
         float *pixel = output(clash->first, clash->second);
         float med = median(pixel[0], pixel[1], pixel[2]);
         pixel[0] = med, pixel[1] = med, pixel[2] = med;

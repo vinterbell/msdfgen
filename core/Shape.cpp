@@ -26,10 +26,10 @@ Contour &Shape::addContour() {
 }
 
 bool Shape::validate() const {
-    for (std::vector<Contour>::const_iterator contour = contours.begin(); contour != contours.end(); ++contour) {
+    for (std::vector<Contour, Allocator<Contour>>::const_iterator contour = contours.begin(); contour != contours.end(); ++contour) {
         if (!contour->edges.empty()) {
             Point2 corner = contour->edges.back()->point(1);
-            for (std::vector<EdgeHolder>::const_iterator edge = contour->edges.begin(); edge != contour->edges.end(); ++edge) {
+            for (std::vector<EdgeHolder, Allocator<EdgeHolder>>::const_iterator edge = contour->edges.begin(); edge != contour->edges.end(); ++edge) {
                 if (!*edge)
                     return false;
                 if ((*edge)->point(0) != corner)
@@ -62,7 +62,7 @@ static void deconvergeEdge(EdgeHolder &edgeHolder, int param, Vector2 vector) {
 }
 
 void Shape::normalize() {
-    for (std::vector<Contour>::iterator contour = contours.begin(); contour != contours.end(); ++contour) {
+    for (std::vector<Contour, Allocator<Contour>>::iterator contour = contours.begin(); contour != contours.end(); ++contour) {
         if (contour->edges.size() == 1) {
             EdgeSegment *parts[3] = { };
             contour->edges[0]->splitInThirds(parts[0], parts[1], parts[2]);
@@ -73,7 +73,7 @@ void Shape::normalize() {
         } else {
             // Push apart convergent edge segments
             EdgeHolder *prevEdge = &contour->edges.back();
-            for (std::vector<EdgeHolder>::iterator edge = contour->edges.begin(); edge != contour->edges.end(); ++edge) {
+            for (std::vector<EdgeHolder, Allocator<EdgeHolder>>::iterator edge = contour->edges.begin(); edge != contour->edges.end(); ++edge) {
                 Vector2 prevDir = (*prevEdge)->direction(1).normalize();
                 Vector2 curDir = (*edge)->direction(0).normalize();
                 if (dotProduct(prevDir, curDir) < MSDFGEN_CORNER_DOT_EPSILON-1) {
@@ -92,12 +92,12 @@ void Shape::normalize() {
 }
 
 void Shape::bound(double &l, double &b, double &r, double &t) const {
-    for (std::vector<Contour>::const_iterator contour = contours.begin(); contour != contours.end(); ++contour)
+    for (std::vector<Contour, Allocator<Contour>>::const_iterator contour = contours.begin(); contour != contours.end(); ++contour)
         contour->bound(l, b, r, t);
 }
 
 void Shape::boundMiters(double &l, double &b, double &r, double &t, double border, double miterLimit, int polarity) const {
-    for (std::vector<Contour>::const_iterator contour = contours.begin(); contour != contours.end(); ++contour)
+    for (std::vector<Contour, Allocator<Contour>>::const_iterator contour = contours.begin(); contour != contours.end(); ++contour)
         contour->boundMiters(l, b, r, t, border, miterLimit, polarity);
 }
 
@@ -115,11 +115,11 @@ Shape::Bounds Shape::getBounds(double border, double miterLimit, int polarity) c
 }
 
 void Shape::scanline(Scanline &line, double y) const {
-    std::vector<Scanline::Intersection> intersections;
+    std::vector<Scanline::Intersection, Allocator<Scanline::Intersection>> intersections;
     double x[3];
     int dy[3];
-    for (std::vector<Contour>::const_iterator contour = contours.begin(); contour != contours.end(); ++contour) {
-        for (std::vector<EdgeHolder>::const_iterator edge = contour->edges.begin(); edge != contour->edges.end(); ++edge) {
+    for (std::vector<Contour, Allocator<Contour>>::const_iterator contour = contours.begin(); contour != contours.end(); ++contour) {
+        for (std::vector<EdgeHolder, Allocator<EdgeHolder>>::const_iterator edge = contour->edges.begin(); edge != contour->edges.end(); ++edge) {
             int n = (*edge)->scanlineIntersections(x, dy, y);
             for (int i = 0; i < n; ++i) {
                 Scanline::Intersection intersection = { x[i], dy[i] };
@@ -128,7 +128,7 @@ void Shape::scanline(Scanline &line, double y) const {
         }
     }
 #ifdef MSDFGEN_USE_CPP11
-    line.setIntersections((std::vector<Scanline::Intersection> &&) intersections);
+    line.setIntersections((std::vector<Scanline::Intersection, Allocator<Scanline::Intersection>> &&) intersections);
 #else
     line.setIntersections(intersections);
 #endif
@@ -136,7 +136,7 @@ void Shape::scanline(Scanline &line, double y) const {
 
 int Shape::edgeCount() const {
     int total = 0;
-    for (std::vector<Contour>::const_iterator contour = contours.begin(); contour != contours.end(); ++contour)
+    for (std::vector<Contour, Allocator<Contour>>::const_iterator contour = contours.begin(); contour != contours.end(); ++contour)
         total += (int) contour->edges.size();
     return total;
 }
@@ -153,23 +153,23 @@ void Shape::orientContours() {
     };
 
     const double ratio = .5*(sqrt(5)-1); // an irrational number to minimize chance of intersecting a corner or other point of interest
-    std::vector<int> orientations(contours.size());
-    std::vector<Intersection> intersections;
+    std::vector<int, Allocator<int>> orientations(contours.size());
+    std::vector<Intersection, Allocator<Intersection>> intersections;
     for (int i = 0; i < (int) contours.size(); ++i) {
         if (!orientations[i] && !contours[i].edges.empty()) {
             // Find an Y that crosses the contour
             double y0 = contours[i].edges.front()->point(0).y;
             double y1 = y0;
-            for (std::vector<EdgeHolder>::const_iterator edge = contours[i].edges.begin(); edge != contours[i].edges.end() && y0 == y1; ++edge)
+            for (std::vector<EdgeHolder, Allocator<EdgeHolder>>::const_iterator edge = contours[i].edges.begin(); edge != contours[i].edges.end() && y0 == y1; ++edge)
                 y1 = (*edge)->point(1).y;
-            for (std::vector<EdgeHolder>::const_iterator edge = contours[i].edges.begin(); edge != contours[i].edges.end() && y0 == y1; ++edge)
+            for (std::vector<EdgeHolder, Allocator<EdgeHolder>>::const_iterator edge = contours[i].edges.begin(); edge != contours[i].edges.end() && y0 == y1; ++edge)
                 y1 = (*edge)->point(ratio).y; // in case all endpoints are in a horizontal line
             double y = mix(y0, y1, ratio);
             // Scanline through whole shape at Y
             double x[3];
             int dy[3];
             for (int j = 0; j < (int) contours.size(); ++j) {
-                for (std::vector<EdgeHolder>::const_iterator edge = contours[j].edges.begin(); edge != contours[j].edges.end(); ++edge) {
+                for (std::vector<EdgeHolder, Allocator<EdgeHolder>>::const_iterator edge = contours[j].edges.begin(); edge != contours[j].edges.end(); ++edge) {
                     int n = (*edge)->scanlineIntersections(x, dy, y);
                     for (int k = 0; k < n; ++k) {
                         Intersection intersection = { x[k], dy[k], j };

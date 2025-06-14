@@ -4,6 +4,8 @@
 #include <vector>
 #include "Rectangle.h"
 
+#include "types.h"
+
 namespace msdf_atlas {
 
 /// Guillotine 2D single bin packer
@@ -19,7 +21,7 @@ public:
     int pack(OrientedRectangle *rectangles, int count);
 
 private:
-    std::vector<Rectangle> spaces;
+    std::vector<Rectangle, Allocator<Rectangle>> spaces;
 
     static int rateFit(int w, int h, int sw, int sh);
 

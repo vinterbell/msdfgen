@@ -3,7 +3,7 @@
 
 namespace msdf_atlas {
 
-void utf8Decode(std::vector<unicode_t> &codepoints, const char *utf8String) {
+void utf8Decode(std::vector<unicode_t, Allocator<unicode_t>> &codepoints, const char *utf8String) {
     bool start = true;
     int rBytes = 0;
     unicode_t cp = 0;

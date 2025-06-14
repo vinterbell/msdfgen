@@ -33,9 +33,9 @@ public:
 
     Scanline();
     /// Populates the intersection list.
-    void setIntersections(const std::vector<Intersection> &intersections);
+    void setIntersections(const std::vector<Intersection, Allocator<Intersection>> &intersections);
 #ifdef MSDFGEN_USE_CPP11
-    void setIntersections(std::vector<Intersection> &&intersections);
+    void setIntersections(std::vector<Intersection, Allocator<Intersection>> &&intersections);
 #endif
     /// Returns the number of intersections left of x.
     int countIntersections(double x) const;
@@ -45,7 +45,7 @@ public:
     bool filled(double x, FillRule fillRule) const;
 
 private:
-    std::vector<Intersection> intersections;
+    std::vector<Intersection, Allocator<Intersection>> intersections;
     mutable int lastIndex;
 
     void preprocess();

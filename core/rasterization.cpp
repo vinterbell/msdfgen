@@ -37,7 +37,7 @@ static void multiDistanceSignCorrection(const BitmapRef<float, N> &sdf, const Sh
         return;
     Scanline scanline;
     bool ambiguous = false;
-    std::vector<char> matchMap;
+    std::vector<char, Allocator<char>> matchMap;
     matchMap.resize(w*h);
     char *match = &matchMap[0];
     for (int y = 0; y < h; ++y) {

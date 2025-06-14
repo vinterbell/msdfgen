@@ -28,7 +28,7 @@ void ImmediateAtlasGenerator<T, N, GEN_FN, AtlasStorage>::generate(const GlyphGe
         glyphBuffer.resize(threadCount*threadBufferSize);
     if (threadCount*maxBoxArea > (int) errorCorrectionBuffer.size())
         errorCorrectionBuffer.resize(threadCount*maxBoxArea);
-    std::vector<GeneratorAttributes> threadAttributes(threadCount);
+    std::vector<GeneratorAttributes, Allocator<GeneratorAttributes>> threadAttributes(threadCount);
     for (int i = 0; i < threadCount; ++i) {
         threadAttributes[i] = attributes;
         threadAttributes[i].config.errorCorrection.buffer = errorCorrectionBuffer.data()+i*maxBoxArea;
@@ -79,7 +79,7 @@ const AtlasStorage &ImmediateAtlasGenerator<T, N, GEN_FN, AtlasStorage>::atlasSt
 }
 
 template <typename T, int N, GeneratorFunction<T, N> GEN_FN, class AtlasStorage>
-const std::vector<GlyphBox> &ImmediateAtlasGenerator<T, N, GEN_FN, AtlasStorage>::getLayout() const {
+const std::vector<GlyphBox, Allocator<GlyphBox>> &ImmediateAtlasGenerator<T, N, GEN_FN, AtlasStorage>::getLayout() const {
     return layout;
 }
 

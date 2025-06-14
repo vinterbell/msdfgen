@@ -120,10 +120,10 @@ void MSDFErrorCorrection::setMinImproveRatio(double minImproveRatio) {
 }
 
 void MSDFErrorCorrection::protectCorners(const Shape &shape) {
-    for (std::vector<Contour>::const_iterator contour = shape.contours.begin(); contour != shape.contours.end(); ++contour)
+    for (std::vector<Contour, Allocator<Contour>>::const_iterator contour = shape.contours.begin(); contour != shape.contours.end(); ++contour)
         if (!contour->edges.empty()) {
             const EdgeSegment *prevEdge = contour->edges.back();
-            for (std::vector<EdgeHolder>::const_iterator edge = contour->edges.begin(); edge != contour->edges.end(); ++edge) {
+            for (std::vector<EdgeHolder, Allocator<EdgeHolder>>::const_iterator edge = contour->edges.begin(); edge != contour->edges.end(); ++edge) {
                 int commonColor = prevEdge->color&(*edge)->color;
                 // If the color changes from prevEdge to edge, this is a corner.
                 if (!(commonColor&(commonColor-1))) {

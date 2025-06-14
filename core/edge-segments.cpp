@@ -7,22 +7,22 @@
 namespace msdfgen {
 
 EdgeSegment *EdgeSegment::create(Point2 p0, Point2 p1, EdgeColor edgeColor) {
-    return new LinearSegment(p0, p1, edgeColor);
+    return make<LinearSegment>(p0, p1, edgeColor);
 }
 
 EdgeSegment *EdgeSegment::create(Point2 p0, Point2 p1, Point2 p2, EdgeColor edgeColor) {
     if (!crossProduct(p1-p0, p2-p1))
-        return new LinearSegment(p0, p2, edgeColor);
-    return new QuadraticSegment(p0, p1, p2, edgeColor);
+        return make<LinearSegment>(p0, p2, edgeColor);
+    return make<QuadraticSegment>(p0, p1, p2, edgeColor);
 }
 
 EdgeSegment *EdgeSegment::create(Point2 p0, Point2 p1, Point2 p2, Point2 p3, EdgeColor edgeColor) {
     Vector2 p12 = p2-p1;
     if (!crossProduct(p1-p0, p12) && !crossProduct(p12, p3-p2))
-        return new LinearSegment(p0, p3, edgeColor);
+        return make<LinearSegment>(p0, p3, edgeColor);
     if ((p12 = 1.5*p1-.5*p0) == 1.5*p2-.5*p3)
-        return new QuadraticSegment(p0, p12, p3, edgeColor);
-    return new CubicSegment(p0, p1, p2, p3, edgeColor);
+        return make<QuadraticSegment>(p0, p12, p3, edgeColor);
+    return make<CubicSegment>(p0, p1, p2, p3, edgeColor);
 }
 
 void EdgeSegment::distanceToPerpendicularDistance(SignedDistance &distance, Point2 origin, double param) const {
@@ -70,15 +70,15 @@ CubicSegment::CubicSegment(Point2 p0, Point2 p1, Point2 p2, Point2 p3, EdgeColor
 }
 
 LinearSegment *LinearSegment::clone() const {
-    return new LinearSegment(p[0], p[1], color);
+    return make<LinearSegment>(p[0], p[1], color);
 }
 
 QuadraticSegment *QuadraticSegment::clone() const {
-    return new QuadraticSegment(p[0], p[1], p[2], color);
+    return make<QuadraticSegment>(p[0], p[1], p[2], color);
 }
 
 CubicSegment *CubicSegment::clone() const {
-    return new CubicSegment(p[0], p[1], p[2], p[3], color);
+    return make<CubicSegment>(p[0], p[1], p[2], p[3], color);
 }
 
 int LinearSegment::type() const {
@@ -500,28 +500,28 @@ void CubicSegment::moveEndPoint(Point2 to) {
 }
 
 void LinearSegment::splitInThirds(EdgeSegment *&part0, EdgeSegment *&part1, EdgeSegment *&part2) const {
-    part0 = new LinearSegment(p[0], point(1/3.), color);
-    part1 = new LinearSegment(point(1/3.), point(2/3.), color);
-    part2 = new LinearSegment(point(2/3.), p[1], color);
+    part0 = make<LinearSegment>(p[0], point(1/3.), color);
+    part1 = make<LinearSegment>(point(1/3.), point(2/3.), color);
+    part2 = make<LinearSegment>(point(2/3.), p[1], color);
 }
 
 void QuadraticSegment::splitInThirds(EdgeSegment *&part0, EdgeSegment *&part1, EdgeSegment *&part2) const {
-    part0 = new QuadraticSegment(p[0], mix(p[0], p[1], 1/3.), point(1/3.), color);
-    part1 = new QuadraticSegment(point(1/3.), mix(mix(p[0], p[1], 5/9.), mix(p[1], p[2], 4/9.), .5), point(2/3.), color);
-    part2 = new QuadraticSegment(point(2/3.), mix(p[1], p[2], 2/3.), p[2], color);
+    part0 = make<QuadraticSegment>(p[0], mix(p[0], p[1], 1/3.), point(1/3.), color);
+    part1 = make<QuadraticSegment>(point(1/3.), mix(mix(p[0], p[1], 5/9.), mix(p[1], p[2], 4/9.), .5), point(2/3.), color);
+    part2 = make<QuadraticSegment>(point(2/3.), mix(p[1], p[2], 2/3.), p[2], color);
 }
 
 void CubicSegment::splitInThirds(EdgeSegment *&part0, EdgeSegment *&part1, EdgeSegment *&part2) const {
-    part0 = new CubicSegment(p[0], p[0] == p[1] ? p[0] : mix(p[0], p[1], 1/3.), mix(mix(p[0], p[1], 1/3.), mix(p[1], p[2], 1/3.), 1/3.), point(1/3.), color);
-    part1 = new CubicSegment(point(1/3.),
+    part0 = make<CubicSegment>(p[0], p[0] == p[1] ? p[0] : mix(p[0], p[1], 1/3.), mix(mix(p[0], p[1], 1/3.), mix(p[1], p[2], 1/3.), 1/3.), point(1/3.), color);
+    part1 = make<CubicSegment>(point(1/3.),
         mix(mix(mix(p[0], p[1], 1/3.), mix(p[1], p[2], 1/3.), 1/3.), mix(mix(p[1], p[2], 1/3.), mix(p[2], p[3], 1/3.), 1/3.), 2/3.),
         mix(mix(mix(p[0], p[1], 2/3.), mix(p[1], p[2], 2/3.), 2/3.), mix(mix(p[1], p[2], 2/3.), mix(p[2], p[3], 2/3.), 2/3.), 1/3.),
         point(2/3.), color);
-    part2 = new CubicSegment(point(2/3.), mix(mix(p[1], p[2], 2/3.), mix(p[2], p[3], 2/3.), 2/3.), p[2] == p[3] ? p[3] : mix(p[2], p[3], 2/3.), p[3], color);
+    part2 = make<CubicSegment>(point(2/3.), mix(mix(p[1], p[2], 2/3.), mix(p[2], p[3], 2/3.), 2/3.), p[2] == p[3] ? p[3] : mix(p[2], p[3], 2/3.), p[3], color);
 }
 
 EdgeSegment *QuadraticSegment::convertToCubic() const {
-    return new CubicSegment(p[0], mix(p[0], p[1], 2/3.), mix(p[1], p[2], 1/3.), p[2], color);
+    return make<CubicSegment>(p[0], mix(p[0], p[1], 2/3.), mix(p[1], p[2], 1/3.), p[2], color);
 }
 
 }

@@ -99,7 +99,7 @@ static bool charsetParse(void *userData, bool disableCharLiterals, bool disableI
     } state = CLEAR;
 
     std::string buffer;
-    std::vector<unicode_t> unicodeBuffer;
+    std::vector<unicode_t, Allocator<unicode_t>> unicodeBuffer;
     unicode_t rangeStart = 0;
     for (int c = READ_CHAR(userData), start = true; c >= 0; start = false) {
         switch (c) {

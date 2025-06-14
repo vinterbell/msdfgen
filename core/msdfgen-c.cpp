@@ -12,13 +12,13 @@ extern "C"
 
   MSDFGEN_PUBLIC msShape *msShapeCreate()
   {
-    Shape *shape = new Shape;
+    Shape *shape = make<Shape>();
     return reinterpret_cast<msShape *>(shape);
   }
 
   MSDFGEN_PUBLIC void msShapeDestroy(msShape *cShape)
   {
-    delete reinterpret_cast<Shape *>(cShape);
+    destroy(reinterpret_cast<Shape *>(cShape));
   }
 
   MSDFGEN_PUBLIC msContour *msShapeAddContour(msShape *cShape)
@@ -48,7 +48,7 @@ extern "C"
     Contour *contour = reinterpret_cast<Contour *>(cContour);
     Point2 p0(x1, y1);
     Point2 p1(x2, y2);
-    contour->addEdge(new LinearSegment(p0, p1));
+    contour->addEdge(make<LinearSegment>(p0, p1));
   }
 
   MSDFGEN_PUBLIC void msContourAddQuadraticEdge(msContour *cContour, double x1, double y1, double x2, double y2, double x3, double y3)
@@ -57,7 +57,7 @@ extern "C"
     Point2 p0(x1, y1);
     Point2 p1(x2, y2);
     Point2 p2(x3, y3);
-    contour->addEdge(new QuadraticSegment(p0, p1, p2));
+    contour->addEdge(make<QuadraticSegment>(p0, p1, p2));
   }
 
   MSDFGEN_PUBLIC void msContourAddCubicEdge(msContour *cContour, double x1, double y1, double x2, double y2, double x3, double y3, double x4, double y4)
@@ -67,7 +67,7 @@ extern "C"
     Point2 p1(x2, y2);
     Point2 p2(x3, y3);
     Point2 p3(x4, y4);
-    contour->addEdge(new CubicSegment(p0, p1, p2, p3));
+    contour->addEdge(make<CubicSegment>(p0, p1, p2, p3));
   }
 
   MSDFGEN_PUBLIC void msGenerateSDF(float *data, int w, int h, msShape *cShape, double range, double sx, double sy, double dx, double dy)

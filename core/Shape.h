@@ -19,7 +19,7 @@ public:
     };
 
     /// The list of contours the shape consists of.
-    std::vector<Contour> contours;
+    std::vector<Contour, Allocator<Contour>> contours;
     /// Specifies whether the shape uses bottom-to-top (false) or top-to-bottom (true) Y coordinates.
     bool inverseYAxis;
 

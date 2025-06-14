@@ -68,21 +68,21 @@ void Scanline::preprocess() {
     if (!intersections.empty()) {
         qsort(&intersections[0], intersections.size(), sizeof(Intersection), compareIntersections);
         int totalDirection = 0;
-        for (std::vector<Intersection>::iterator intersection = intersections.begin(); intersection != intersections.end(); ++intersection) {
+        for (std::vector<Intersection, Allocator<Intersection>>::iterator intersection = intersections.begin(); intersection != intersections.end(); ++intersection) {
             totalDirection += intersection->direction;
             intersection->direction = totalDirection;
         }
     }
 }
 
-void Scanline::setIntersections(const std::vector<Intersection> &intersections) {
+void Scanline::setIntersections(const std::vector<Intersection, Allocator<Intersection>> &intersections) {
     this->intersections = intersections;
     preprocess();
 }
 
 #ifdef MSDFGEN_USE_CPP11
-void Scanline::setIntersections(std::vector<Intersection> &&intersections) {
-    this->intersections = (std::vector<Intersection> &&) intersections;
+void Scanline::setIntersections(std::vector<Intersection, Allocator<Intersection>> &&intersections) {
+    this->intersections = (std::vector<Intersection, Allocator<Intersection>> &&) intersections;
     preprocess();
 }
 #endif

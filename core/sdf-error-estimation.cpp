@@ -8,7 +8,7 @@ namespace msdfgen {
 
 void scanlineSDF(Scanline &line, const BitmapConstRef<float, 1> &sdf, const Projection &projection, double y, bool inverseYAxis) {
     if (!(sdf.width > 0 && sdf.height > 0))
-        return line.setIntersections(std::vector<Scanline::Intersection>());
+        return line.setIntersections(std::vector<Scanline::Intersection, Allocator<Scanline::Intersection>>());
     double pixelY = clamp(projection.projectY(y)-.5, double(sdf.height-1));
     if (inverseYAxis)
         pixelY = sdf.height-1-pixelY;
@@ -21,7 +21,7 @@ void scanlineSDF(Scanline &line, const BitmapConstRef<float, 1> &sdf, const Proj
         bt = 1;
     }
     bool inside = false;
-    std::vector<Scanline::Intersection> intersections;
+    std::vector<Scanline::Intersection, Allocator<Scanline::Intersection>> intersections;
     float lv, rv = mix(*sdf(0, b), *sdf(0, t), bt);
     if ((inside = rv > .5f)) {
         Scanline::Intersection intersection = { -1e240, 1 };
@@ -39,7 +39,7 @@ void scanlineSDF(Scanline &line, const BitmapConstRef<float, 1> &sdf, const Proj
         }
     }
 #ifdef MSDFGEN_USE_CPP11
-    line.setIntersections((std::vector<Scanline::Intersection> &&) intersections);
+    line.setIntersections((std::vector<Scanline::Intersection, Allocator<Scanline::Intersection>> &&) intersections);
 #else
     line.setIntersections(intersections);
 #endif
@@ -48,7 +48,7 @@ void scanlineSDF(Scanline &line, const BitmapConstRef<float, 1> &sdf, const Proj
 template <int N>
 void scanlineMSDF(Scanline &line, const BitmapConstRef<float, N> &sdf, const Projection &projection, double y, bool inverseYAxis) {
     if (!(sdf.width > 0 && sdf.height > 0))
-        return line.setIntersections(std::vector<Scanline::Intersection>());
+        return line.setIntersections(std::vector<Scanline::Intersection, Allocator<Scanline::Intersection>>());
     double pixelY = clamp(projection.projectY(y)-.5, double(sdf.height-1));
     if (inverseYAxis)
         pixelY = sdf.height-1-pixelY;
@@ -61,7 +61,7 @@ void scanlineMSDF(Scanline &line, const BitmapConstRef<float, N> &sdf, const Pro
         bt = 1;
     }
     bool inside = false;
-    std::vector<Scanline::Intersection> intersections;
+    std::vector<Scanline::Intersection, Allocator<Scanline::Intersection>> intersections;
     float lv[3], rv[3];
     rv[0] = mix(sdf(0, b)[0], sdf(0, t)[0], bt);
     rv[1] = mix(sdf(0, b)[1], sdf(0, t)[1], bt);
@@ -118,7 +118,7 @@ void scanlineMSDF(Scanline &line, const BitmapConstRef<float, N> &sdf, const Pro
         }
     }
 #ifdef MSDFGEN_USE_CPP11
-    line.setIntersections((std::vector<Scanline::Intersection> &&) intersections);
+    line.setIntersections((std::vector<Scanline::Intersection, Allocator<Scanline::Intersection>> &&) intersections);
 #else
     line.setIntersections(intersections);
 #endif

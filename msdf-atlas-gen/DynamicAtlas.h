@@ -42,8 +42,8 @@ private:
     int totalArea;
     RectanglePacker packer;
     AtlasGenerator generator;
-    std::vector<Rectangle> rectangles;
-    std::vector<Remap> remapBuffer;
+    std::vector<Rectangle, Allocator<Rectangle>> rectangles;
+    std::vector<Remap, Allocator<Remap>> remapBuffer;
 
 };
 

@@ -39,8 +39,8 @@ public:
 
 private:
     Point2 p;
-    std::vector<int> windings;
-    std::vector<EdgeSelector> edgeSelectors;
+    std::vector<int, Allocator<int>> windings;
+    std::vector<EdgeSelector, Allocator<EdgeSelector>> edgeSelectors;
 
 };
 

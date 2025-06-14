@@ -233,8 +233,8 @@ bool readShapeDescription(const char *input, Shape &output, bool *colorsSpecifie
 }
 
 static bool isColored(const Shape &shape) {
-    for (std::vector<Contour>::const_iterator contour = shape.contours.begin(); contour != shape.contours.end(); ++contour)
-        for (std::vector<EdgeHolder>::const_iterator edge = contour->edges.begin(); edge != contour->edges.end(); ++edge)
+    for (std::vector<Contour, Allocator<Contour>>::const_iterator contour = shape.contours.begin(); contour != shape.contours.end(); ++contour)
+        for (std::vector<EdgeHolder, Allocator<EdgeHolder>>::const_iterator edge = contour->edges.begin(); edge != contour->edges.end(); ++edge)
             if ((*edge)->color != WHITE)
                 return true;
     return false;
@@ -246,10 +246,10 @@ bool writeShapeDescription(FILE *output, const Shape &shape) {
     bool writeColors = isColored(shape);
     if (shape.inverseYAxis)
         fprintf(output, "@invert-y\n");
-    for (std::vector<Contour>::const_iterator contour = shape.contours.begin(); contour != shape.contours.end(); ++contour) {
+    for (std::vector<Contour, Allocator<Contour>>::const_iterator contour = shape.contours.begin(); contour != shape.contours.end(); ++contour) {
         fprintf(output, "{\n");
         if (!contour->edges.empty()) {
-            for (std::vector<EdgeHolder>::const_iterator edge = contour->edges.begin(); edge != contour->edges.end(); ++edge) {
+            for (std::vector<EdgeHolder, Allocator<EdgeHolder>>::const_iterator edge = contour->edges.begin(); edge != contour->edges.end(); ++edge) {
                 char colorCode = '\0';
                 if (writeColors) {
                     switch ((*edge)->color) {

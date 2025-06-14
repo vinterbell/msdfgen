@@ -168,7 +168,7 @@ static bool parseUnicode(unicode_t &unicode, const char *arg) {
 }
 
 #ifndef MSDFGEN_DISABLE_VARIABLE_FONTS
-static FontHandle *loadVarFont(FreetypeHandle *library, const char *filename) {
+static FontHandle *loadVarFont(FreetypeHandle library, const char *filename) {
     std::string buffer;
     while (*filename && *filename != '?')
         buffer.push_back(*filename++);
@@ -1037,7 +1037,7 @@ int main(int argc, const char *const *argv) {
             if (!glyphIndexSpecified && !unicode)
                 ABORT("No character specified! Use -font <file.ttf/otf> <character code>. Character code can be a Unicode index (65, 0x41), a character in apostrophes ('A'), or a glyph index prefixed by g (g36, g0x24).");
             struct FreetypeFontGuard {
-                FreetypeHandle *ft;
+                FreetypeHandle ft;
                 FontHandle *font;
                 FreetypeFontGuard() : ft(), font() { }
                 ~FreetypeFontGuard() {

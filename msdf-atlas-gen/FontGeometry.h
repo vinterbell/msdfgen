@@ -20,18 +20,18 @@ public:
     class GlyphRange {
     public:
         GlyphRange();
-        GlyphRange(const std::vector<GlyphGeometry> *glyphs, size_t rangeStart, size_t rangeEnd);
+        GlyphRange(const std::vector<GlyphGeometry, Allocator<GlyphGeometry>> *glyphs, size_t rangeStart, size_t rangeEnd);
         size_t size() const;
         bool empty() const;
         const GlyphGeometry *begin() const;
         const GlyphGeometry *end() const;
     private:
-        const std::vector<GlyphGeometry> *glyphs;
+        const std::vector<GlyphGeometry, Allocator<GlyphGeometry>> *glyphs;
         size_t rangeStart, rangeEnd;
     };
 
     FontGeometry();
-    explicit FontGeometry(std::vector<GlyphGeometry> *glyphStorage);
+    explicit FontGeometry(std::vector<GlyphGeometry, Allocator<GlyphGeometry>> *glyphStorage);
     FontGeometry(FontGeometry &&orig);
     FontGeometry &operator=(FontGeometry &&orig);
 
@@ -67,7 +67,7 @@ public:
     bool getAdvance(double &advance, msdfgen::GlyphIndex index1, msdfgen::GlyphIndex index2) const;
     bool getAdvance(double &advance, unicode_t codepoint1, unicode_t codepoint2) const;
     /// Returns the complete mapping of kerning pairs (by glyph indices) and their respective advance values
-    const std::map<std::pair<int, int>, double> &getKerning() const;
+    const std::map<std::pair<int, int>, double, std::less<std::pair<int, int>>, Allocator<std::pair<const std::pair<int, int>, double>>> &getKerning() const;
     /// Returns the name associated with the font or null if not set
     const char *getName() const;
 
@@ -75,12 +75,12 @@ private:
     double geometryScale;
     msdfgen::FontMetrics metrics;
     GlyphIdentifierType preferredIdentifierType;
-    std::vector<GlyphGeometry> *glyphs;
+    std::vector<GlyphGeometry, Allocator<GlyphGeometry>> *glyphs;
     size_t rangeStart, rangeEnd;
-    std::map<int, size_t> glyphsByIndex;
-    std::map<unicode_t, size_t> glyphsByCodepoint;
-    std::map<std::pair<int, int>, double> kerning;
-    std::vector<GlyphGeometry> ownGlyphs;
+    std::map<int, size_t, std::less<int>, Allocator<std::pair<const int, size_t>>> glyphsByIndex;
+    std::map<unicode_t, size_t, std::less<unicode_t>, Allocator<std::pair<const unicode_t, size_t>>> glyphsByCodepoint;
+    std::map<std::pair<int, int>, double, std::less<std::pair<int, int>>, Allocator<std::pair<const std::pair<int, int>, double>>> kerning;
+    std::vector<GlyphGeometry, Allocator<GlyphGeometry>> ownGlyphs;
     std::string name;
 
     FontGeometry(const FontGeometry &);

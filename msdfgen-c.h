@@ -7,9 +7,6 @@ extern "C"
 {
 #endif
 
-    extern void *msdfgen_malloc(size_t size);
-    extern void msdfgen_free(void *ptr);
-
     struct msContour;
     struct msShape;
     typedef struct msContour msContour;

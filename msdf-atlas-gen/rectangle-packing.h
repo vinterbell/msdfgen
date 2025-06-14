@@ -3,6 +3,7 @@
 
 #include <utility>
 #include "Rectangle.h"
+#include "types.h"
 
 namespace msdf_atlas {
 

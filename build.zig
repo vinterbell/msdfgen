@@ -15,6 +15,24 @@ pub fn build(b: *std.Build) !void {
         .optimize = .ReleaseFast,
     });
 
+    // need to link this if not using zig or own allocator
+    const zigless_allocation_shim = b.addLibrary(.{
+        .name = "msdfgen-malloc-shim",
+        .root_module = b.createModule(.{
+            .target = target,
+            .optimize = optimize,
+            .link_libc = true,
+        }),
+        .version = version,
+    });
+    zigless_allocation_shim.addCSourceFile(.{
+        .file = b.path("src/memory.cpp"),
+        .flags = &.{
+            "-std=c++17",
+            "-fno-sanitize=undefined",
+        },
+    });
+
     const libgen = b.addLibrary(.{
         .name = "msdfgen",
         .root_module = b.createModule(.{
@@ -27,6 +45,7 @@ pub fn build(b: *std.Build) !void {
     if (target.result.abi != .msvc) {
         libgen.root_module.link_libcpp = true;
     }
+    libgen.root_module.addCMacro("MSDFGEN_USE_CPP11", "1");
     libgen.root_module.addCMacro("MSDFGEN_VERSION", b.fmt("{}", .{version}));
     libgen.root_module.addCMacro("MSDFGEN_VERSION_MAJOR", b.fmt("{}", .{version.major}));
     libgen.root_module.addCMacro("MSDFGEN_VERSION_MINOR", b.fmt("{}", .{version.minor}));
@@ -63,7 +82,7 @@ pub fn build(b: *std.Build) !void {
         },
         .language = .cpp,
         .flags = &.{
-            "-std=c++11",
+            "-std=c++17",
             "-fno-sanitize=undefined",
         },
     });
@@ -78,7 +97,7 @@ pub fn build(b: *std.Build) !void {
         },
         .language = .cpp,
         .flags = &.{
-            "-std=c++11",
+            "-std=c++17",
             "-fno-sanitize=undefined",
         },
     });
@@ -92,16 +111,6 @@ pub fn build(b: *std.Build) !void {
         .include_extensions = &.{ ".hpp", ".h" },
     });
     b.installArtifact(libgen);
-
-    const msdfgen = b.addModule("msdfgen", .{
-        .root_source_file = b.path("src/msdfgen.zig"),
-        .target = target,
-        .optimize = optimize,
-        .imports = &.{
-            .{ .name = "freetype", .module = freetype_dep.module("zfreetype") },
-        },
-    });
-    msdfgen.linkLibrary(libgen);
 
     const libatlasgen = b.addLibrary(.{
         .name = "msdfatlasgen",
@@ -152,7 +161,7 @@ pub fn build(b: *std.Build) !void {
         },
         .language = .cpp,
         .flags = &.{
-            "-std=c++11",
+            "-std=c++17",
             "-fno-sanitize=undefined",
         },
     });
@@ -162,13 +171,15 @@ pub fn build(b: *std.Build) !void {
     b.installArtifact(libgen);
     b.installArtifact(libatlasgen);
 
-    const msdfatlasgen = b.addModule("msdfatlasgen", .{
-        .root_source_file = b.path("src/msdfatlasgen.zig"),
+    // includes both atlasgen and msdfgen
+    const msdfgen = b.addModule("msdfgen", .{
+        .root_source_file = b.path("src/msdfgen.zig"),
         .target = target,
         .optimize = optimize,
         .imports = &.{
-            .{ .name = "msdfgen", .module = msdfgen },
+            .{ .name = "freetype", .module = freetype_dep.module("zfreetype") },
         },
     });
-    msdfatlasgen.linkLibrary(libatlasgen);
+    msdfgen.linkLibrary(libgen);
+    msdfgen.linkLibrary(libatlasgen);
 }

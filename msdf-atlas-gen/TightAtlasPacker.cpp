@@ -23,8 +23,8 @@ TightAtlasPacker::TightAtlasPacker() :
 
 int TightAtlasPacker::tryPack(GlyphGeometry *glyphs, int count, DimensionsConstraint dimensionsConstraint, int &width, int &height, double scale) const {
     // Wrap glyphs into boxes
-    std::vector<Rectangle> rectangles;
-    std::vector<GlyphGeometry *> rectangleGlyphs;
+    std::vector<Rectangle, Allocator<Rectangle>> rectangles;
+    std::vector<GlyphGeometry *, Allocator<GlyphGeometry *>> rectangleGlyphs;
     rectangles.reserve(count);
     rectangleGlyphs.reserve(count);
     GlyphGeometry::GlyphAttributes attribs = { };

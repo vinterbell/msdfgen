@@ -330,7 +330,7 @@ struct Configuration {
 };
 
 template <typename T, typename S, int N, GeneratorFunction<S, N> GEN_FN>
-static bool makeAtlas(const std::vector<GlyphGeometry> &glyphs, const std::vector<FontGeometry> &fonts, const Configuration &config) {
+static bool makeAtlas(const std::vector<GlyphGeometry, Allocator<GlyphGeometry>> &glyphs, const std::vector<FontGeometry, Allocator<FontGeometry>> &fonts, const Configuration &config) {
     ImmediateAtlasGenerator<S, N, GEN_FN, BitmapAtlasStorage<T, N> > generator(config.width, config.height);
     generator.setAttributes(config.generatorAttributes);
     generator.setThreadCount(config.threadCount);
@@ -372,7 +372,7 @@ int main(int argc, const char *const *argv) {
     #define ABORT(msg) do { fputs(msg "\n", stderr); return 1; } while (false)
 
     int result = 0;
-    std::vector<FontInput> fontInputs;
+    std::vector<FontInput, Allocator<FontInput>> fontInputs;
     FontInput fontInput = { };
     Configuration config = { };
     fontInput.glyphIdentifierType = GlyphIdentifierType::UNICODE_CODEPOINT;
@@ -943,7 +943,7 @@ int main(int argc, const char *const *argv) {
 
     // Finalize font inputs
     const FontInput *nextFontInput = &fontInput;
-    for (std::vector<FontInput>::reverse_iterator it = fontInputs.rbegin(); it != fontInputs.rend(); ++it) {
+    for (std::vector<FontInput, Allocator<FontInput>>::reverse_iterator it = fontInputs.rbegin(); it != fontInputs.rend(); ++it) {
         if (!it->fontFilename && nextFontInput->fontFilename)
             it->fontFilename = nextFontInput->fontFilename;
         if (!(it->charsetFilename || it->charsetString || it->glyphIdentifierType == GlyphIdentifierType::GLYPH_INDEX) && (nextFontInput->charsetFilename || nextFontInput->charsetString || nextFontInput->glyphIdentifierType == GlyphIdentifierType::GLYPH_INDEX)) {
@@ -1068,8 +1068,8 @@ int main(int argc, const char *const *argv) {
     double uniformOriginX, uniformOriginY;
 
     // Load fonts
-    std::vector<GlyphGeometry> glyphs;
-    std::vector<FontGeometry> fonts;
+    std::vector<GlyphGeometry, Allocator<GlyphGeometry>> glyphs;
+    std::vector<FontGeometry, Allocator<FontGeometry>> fonts;
     bool anyCodepointsAvailable = false;
     {
         class FontHolder {
@@ -1424,7 +1424,7 @@ int main(int argc, const char *const *argv) {
 
     if (config.shadronPreviewFilename && config.shadronPreviewText) {
         if (anyCodepointsAvailable) {
-            std::vector<unicode_t> previewText;
+            std::vector<unicode_t, Allocator<unicode_t>> previewText;
             utf8Decode(previewText, config.shadronPreviewText);
             previewText.push_back(0);
             if (generateShadronPreview(fonts.data(), fonts.size(), config.imageType, config.width, config.height, config.pxRange, previewText.data(), config.imageFilename, floatingPointFormat, config.shadronPreviewFilename))

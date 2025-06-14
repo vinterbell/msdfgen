@@ -1,5 +1,6 @@
 
 #include "RectanglePacker.h"
+#include "types.h"
 
 #include <algorithm>
 
@@ -8,7 +9,7 @@ namespace msdf_atlas {
 #define WORST_FIT 0x7fffffff
 
 template <typename T>
-static void removeFromUnorderedVector(std::vector<T> &vector, size_t index) {
+static void removeFromUnorderedVector(std::vector<T, Allocator<T>> &vector, size_t index) {
     if (index != vector.size()-1)
         std::swap(vector[index], vector.back());
     vector.pop_back();
@@ -55,7 +56,7 @@ void RectanglePacker::splitSpace(int index, int w, int h) {
 }
 
 int RectanglePacker::pack(Rectangle *rectangles, int count) {
-    std::vector<int> remainingRects(count);
+    std::vector<int, Allocator<int>> remainingRects(count);
     for (int i = 0; i < count; ++i)
         remainingRects[i] = i;
     while (!remainingRects.empty()) {
@@ -94,7 +95,7 @@ int RectanglePacker::pack(Rectangle *rectangles, int count) {
 }
 
 int RectanglePacker::pack(OrientedRectangle *rectangles, int count) {
-    std::vector<int> remainingRects(count);
+    std::vector<int, Allocator<int>> remainingRects(count);
     for (int i = 0; i < count; ++i)
         remainingRects[i] = i;
     while (!remainingRects.empty()) {
