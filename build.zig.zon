@@ -37,8 +37,8 @@
     // internet connectivity.
     .dependencies = .{
         .freetype = .{
-            .url = "git+https://github.com/vinterbell/freetype.git#bcbf1b5de4e4d099cbffd0eb224a63fb789259b3",
-            .hash = "freetype-2.13.3-AAAAAKCUeACmXKviNI5gdScuno8JZ75leBYYyjncleo0",
+            .url = "git+https://github.com/vinterbell/freetype.git#5aa426f4218d8a9e3ce2b5bcaf77aa65ea4ddc66",
+            .hash = "freetype-2.13.3-AAAAAF-geACDEz2cbvkH0pz_US5xX-vZHUe-U426SCz1",
         },
     },
     .paths = .{
