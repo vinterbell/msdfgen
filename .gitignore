@@ -32,3 +32,4 @@ out/
 /line-ending-check.bat
 
 .zig-cache
+zig-out

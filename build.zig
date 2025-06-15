@@ -32,6 +32,10 @@ pub fn build(b: *std.Build) !void {
             "-fno-sanitize=undefined",
         },
     });
+    if (target.result.abi != .msvc) {
+        zigless_allocation_shim.root_module.link_libcpp = true;
+    }
+    b.installArtifact(zigless_allocation_shim);
 
     const libgen = b.addLibrary(.{
         .name = "msdfgen",
