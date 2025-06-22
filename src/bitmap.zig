@@ -55,11 +55,7 @@ pub fn BitmapRef(comptime T: type, comptime Channels: u8) type {
         };
 
         pub fn slice(self: *const Self) []T {
-            if (self.data) |data| {
-                return data[0 .. self.width * self.height * @as(usize, Channels)];
-            } else {
-                return &.{};
-            }
+            return self.data[0 .. self.width * self.height * @as(usize, Channels)];
         }
 
         pub fn byteSlice(self: *const Self) []u8 {
@@ -99,11 +95,7 @@ pub fn BitmapConstRef(comptime T: type, comptime Channels: u8) type {
         };
 
         pub fn slice(self: *const Self) []const T {
-            if (self.data) |data| {
-                return data[0 .. self.width * self.height * @as(usize, Channels)];
-            } else {
-                return &.{};
-            }
+            return self.data[0 .. self.width * self.height * @as(usize, Channels)];
         }
 
         pub fn byteSlice(self: *const Self) []const u8 {

@@ -197,6 +197,11 @@ pub fn build(b: *std.Build) !void {
         },
     });
 
+    const ztb_dep = b.dependency("stb", .{
+        .target = target,
+        .optimize = optimize,
+    });
+
     const example_mod = b.createModule(.{
         .root_source_file = b.path("src/example/main.zig"),
         .target = target,
@@ -205,6 +210,7 @@ pub fn build(b: *std.Build) !void {
             // .{ .name = "msdfgen", .module = msdfgen },
             .{ .name = "msdfgen", .module = zmsdfgen },
             .{ .name = "msdfgenold", .module = msdfgen },
+            .{ .name = "stb", .module = ztb_dep.module("zstb") },
         },
     });
     const example_exe = b.addExecutable(.{

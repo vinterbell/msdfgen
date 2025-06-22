@@ -33,3 +33,5 @@ out/
 
 .zig-cache
 zig-out
+
+*.hdr

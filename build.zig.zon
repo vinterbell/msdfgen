@@ -40,6 +40,10 @@
             .url = "git+https://github.com/vinterbell/freetype.git#5aa426f4218d8a9e3ce2b5bcaf77aa65ea4ddc66",
             .hash = "freetype-2.13.3-AAAAAF-geACDEz2cbvkH0pz_US5xX-vZHUe-U426SCz1",
         },
+        .stb = .{
+            .url = "git+https://github.com/vinterbell/stb#f59cfa2665f9449fcb7d109d1a8ee138629f3663",
+            .hash = "stb-0.1.0-KjHKnGpKEABuDu1Ef6HGGEsJvm-8VTO7yRx5poebMtUE",
+        },
     },
     .paths = .{
         "build.zig",

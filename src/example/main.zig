@@ -2,12 +2,14 @@ const std = @import("std");
 const msdfgen = @import("msdfgen");
 const msdfgenold = @import("msdfgenold");
 
+const stb = @import("stb");
+
 pub fn main() !void {
     var dbg_allocator: std.heap.DebugAllocator(.{}) = .init;
     defer _ = dbg_allocator.deinit();
     const allocator = dbg_allocator.allocator();
 
-    const char = 'r';
+    const char = 'A';
 
     const arial_windows_path = "C:\\Windows\\Fonts\\arial.ttf";
     const arial_bytes = try std.fs.cwd().readFileAlloc(
@@ -37,14 +39,14 @@ pub fn main() !void {
         try shape.normalize();
         try msdfgen.edgeColoringSimple(&shape, 3.0, 0, allocator);
 
-        var my_bitmap: msdfgen.Bitmap(f32, 3) = try .init(allocator, 32, 32);
+        var my_bitmap: msdfgen.Bitmap(f32, 3) = try .init(allocator, 64, 64);
         defer my_bitmap.deinit();
 
         var config: msdfgen.MSDFGeneratorConfig = .default;
         config.generator.allocator = allocator;
 
         try msdfgen.generateMSDF(my_bitmap.ref(), &shape, .init(
-            .init(.init(32.0, 32.0), .init(0.125, 0.125)),
+            .init(.init(64.0, 64.0), .init(0.125, 0.125)),
             .fromRange(.symmetrical(0.125)),
         ), config);
 
@@ -84,6 +86,45 @@ pub fn main() !void {
                 });
             }
         }
+
+        stb.init(allocator);
+        defer stb.deinit();
+
+        var img = try stb.Image.createEmpty(64, 64, 4, .{
+            .bytes_per_component = 4,
+            .bytes_per_row = 64 * 4 * 4,
+        });
+        defer img.deinit();
+
+        const float_data_src = my_bitmap.data.slice();
+        const float_data_dst = std.mem.bytesAsSlice(f32, img.data);
+        for (0..my_bitmap.data.height) |y| {
+            const row_dst = my_bitmap.data.height - y - 1;
+            const row_src = y;
+            for (0..my_bitmap.data.width) |x| {
+                const src_index = (row_dst * my_bitmap.data.width + x) * 3;
+                const dst_index = (row_src * my_bitmap.data.width + x) * 4;
+
+                float_data_dst[dst_index + 0] = float_data_src[src_index + 0];
+                float_data_dst[dst_index + 1] = float_data_src[src_index + 1];
+                float_data_dst[dst_index + 2] = float_data_src[src_index + 2];
+                float_data_dst[dst_index + 3] = 1.0;
+
+                // the sdf as if it was on the gpu
+                // const value = msdfgen.util.median(
+                //     f32,
+                //     float_data_src[src_index + 0],
+                //     float_data_src[src_index + 1],
+                //     float_data_src[src_index + 2],
+                // );
+                // float_data_dst[dst_index + 0] = value;
+                // float_data_dst[dst_index + 1] = value;
+                // float_data_dst[dst_index + 2] = value;
+                // float_data_dst[dst_index + 3] = 1.0; // alpha
+            }
+        }
+
+        try img.writeToFile("glyph.hdr", .hdr);
     }
 
     // use old
@@ -103,15 +144,15 @@ pub fn main() !void {
         shape.normalize();
         shape.edgeColoringSimple(3.0, 0.0);
 
-        const data = allocator.alloc(f32, 32 * 32 * 3) catch return error.OutOfMemory;
+        const data = allocator.alloc(f32, 64 * 64 * 3) catch return error.OutOfMemory;
         defer allocator.free(data);
 
         shape.generateMSDF(.{
             .data = data.ptr,
-            .w = 32,
-            .h = 32,
-            .sx = 32.0,
-            .sy = 32.0,
+            .w = 64,
+            .h = 64,
+            .sx = 64.0,
+            .sy = 64.0,
             .dx = 0.125,
             .dy = 0.125,
             .range = 0.125,
@@ -119,11 +160,11 @@ pub fn main() !void {
 
         const out_writer = std.io.getStdOut().writer();
         // print it as ascii art
-        for (0..32) |y| {
-            const row = 32 - y - 1;
-            for (0..32) |x| {
+        for (0..64) |y| {
+            const row = 64 - y - 1;
+            for (0..64) |x| {
                 const index = @max(
-                    @as(f32, data[(row * 32 + x) * 3 + 0]) / 0.25,
+                    @as(f64, data[(row * 64 + x) * 3 + 0]) / 0.25,
                     0,
                 );
                 const c: u8 = ascii_fill[@as(usize, @intFromFloat(index))];
