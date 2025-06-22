@@ -194,6 +194,21 @@ extern "C"
     /// 3x f32 for each pixel in the atlas
     float *msaImmediateAtlasGeneratorGetBitmap(msaImmediateAtlasGenerator *generator, int *width, int *height);
 
+    typedef enum msaAtlasChangeFlags
+    {
+        NO_CHANGE = 0x00,
+        RESIZED = 0x01,
+        REARRANGED = 0x02
+    } msaAtlasChangeFlags;
+
+    struct msaDynamicAtlasGenerator;
+    typedef struct msaDynamicAtlasGenerator msaDynamicAtlasGenerator;
+    msaDynamicAtlasGenerator *msaDynamicAtlasGeneratorCreate(void);
+    void msaDynamicAtlasGeneratorDestroy(msaDynamicAtlasGenerator *generator);
+    msaAtlasChangeFlags msaDynamicAtlasGeneratorAddGlyphs(
+        msaDynamicAtlasGenerator *generator,
+        const msaGlyphRange range);
+
 #ifdef __cplusplus
 }
 #endif

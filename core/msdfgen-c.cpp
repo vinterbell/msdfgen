@@ -37,10 +37,30 @@ extern "C"
     reinterpret_cast<Shape *>(cShape)->orientContours();
   }
 
+  MSDFGEN_PUBLIC msBound msShapeGetBounds(msShape *cShape, double border, double miterLimit, int polarity)
+  {
+    Shape *shape = reinterpret_cast<Shape *>(cShape);
+    Shape::Bounds bounds = shape->getBounds(border, miterLimit, polarity);
+    msBound result = { bounds.l, bounds.b, bounds.r, bounds.t };
+    return result;
+  }
+
   MSDFGEN_PUBLIC void msEdgeColoringSimple(msShape *cShape, double angleThreshold, unsigned long long seed)
   {
     Shape *shape = reinterpret_cast<Shape *>(cShape);
     edgeColoringSimple(*shape, angleThreshold, seed);
+  }
+
+  MSDFGEN_PUBLIC void msEdgeColoringInkTrap(msShape *cShape, double angleThreshold, unsigned long long seed)
+  {
+    Shape *shape = reinterpret_cast<Shape *>(cShape);
+    edgeColoringInkTrap(*shape, angleThreshold, seed);
+  }
+
+  MSDFGEN_PUBLIC void msEdgeColoringByDistance(msShape *cShape, double angleThreshold, unsigned long long seed)
+  {
+    Shape *shape = reinterpret_cast<Shape *>(cShape);
+    edgeColoringByDistance(*shape, angleThreshold, seed);
   }
 
   MSDFGEN_PUBLIC void msContourAddLinearEdge(msContour *cContour, double x1, double y1, double x2, double y2)

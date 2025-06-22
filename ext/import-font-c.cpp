@@ -66,11 +66,26 @@ extern "C"
                      msFontCoordinateScaling coordinateScaling = FONT_SCALING_LEGACY,
                      double *outAdvance = nullptr)
     {
-        return msdfgen::loadGlyph(*(msdfgen::Shape *)output,
+        const bool result = msdfgen::loadGlyph(*(msdfgen::Shape *)output,
                                   (msdfgen::FontHandle *)font,
                                   unicode,
                                   (msdfgen::FontCoordinateScaling)coordinateScaling,
                                   outAdvance);
+
+        // loop over and print all the contours and edges
+        if (result) {
+            for (const auto &contour : ((msdfgen::Shape *)output)->contours) {
+                printf("Contour with %zu edges:\n", contour.edges.size());
+                for (const auto &edge : contour.edges) {
+                    printf("  Edge %i from (%f, %f) to (%f, %f)\n",
+                        (*edge).type(),   
+                        (*edge).point(0).x, (*edge).point(0).y,
+                           (*edge).point(1).x, (*edge).point(1).y);
+                }
+            }
+        }
+
+        return result;
     }
 
     bool msGetKerning(double *output, msFontHandle *font, msGlyphIndex glyphIndex0, msGlyphIndex glyphIndex1, msFontCoordinateScaling coordinateScaling)

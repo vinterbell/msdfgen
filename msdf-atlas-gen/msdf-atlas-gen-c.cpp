@@ -254,4 +254,27 @@ extern "C"
         *height = storage.height;
         return (float *)storage.pixels;
     }
+
+    using DynamicAtGen = DynamicAtlas<ImmediateAtGen>;
+
+    using ChangeFlags = DynamicAtGen::ChangeFlags;
+
+    // dynamic atlas generator
+    msaDynamicAtlasGenerator *msaDynamicAtlasGeneratorCreate(void)
+    {
+        return (msaDynamicAtlasGenerator *)msdfgen::make<DynamicAtGen>();
+    }
+    void msaDynamicAtlasGeneratorDestroy(msaDynamicAtlasGenerator *generator)
+    {
+        DynamicAtGen *gen = (DynamicAtGen *)generator;
+        msdfgen::destroy(gen);
+    }
+
+    msaAtlasChangeFlags msaDynamicAtlasGeneratorAddGlyphs(
+        msaDynamicAtlasGenerator *generator,
+        const msaGlyphRange glyphs)
+    {
+        DynamicAtGen *gen = (DynamicAtGen *)generator;
+        return (msaAtlasChangeFlags)gen->add((msdf_atlas::GlyphGeometry *)glyphs.firstGlyph, (int)glyphs.glyphCount, true);
+    }
 }

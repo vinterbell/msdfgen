@@ -186,4 +186,45 @@ pub fn build(b: *std.Build) !void {
     });
     msdfgen.linkLibrary(libgen);
     msdfgen.linkLibrary(libatlasgen);
+
+    // new rewrite
+    const zmsdfgen = b.addModule("zmsdfgen", .{
+        .root_source_file = b.path("src/root.zig"),
+        .target = target,
+        .optimize = optimize,
+        .imports = &.{
+            .{ .name = "freetype", .module = freetype_dep.module("zfreetype") },
+        },
+    });
+
+    const example_mod = b.createModule(.{
+        .root_source_file = b.path("src/example/main.zig"),
+        .target = target,
+        .optimize = optimize,
+        .imports = &.{
+            // .{ .name = "msdfgen", .module = msdfgen },
+            .{ .name = "msdfgen", .module = zmsdfgen },
+            .{ .name = "msdfgenold", .module = msdfgen },
+        },
+    });
+    const example_exe = b.addExecutable(.{
+        .name = "example",
+        .root_module = example_mod,
+        .optimize = optimize,
+    });
+    b.installArtifact(example_exe);
+
+    const run_example = b.addRunArtifact(example_exe);
+    const run_step = b.step("run", "Run the example");
+    run_step.dependOn(&run_example.step);
+    run_step.dependOn(b.getInstallStep());
+
+    const test_exe = b.addTest(.{
+        .root_module = zmsdfgen,
+        .target = target,
+        .optimize = optimize,
+    });
+
+    const test_step = b.step("test", "Run the tests");
+    test_step.dependOn(&test_exe.step);
 }

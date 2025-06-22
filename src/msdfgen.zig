@@ -52,12 +52,24 @@ pub const Shape = opaque {
         msShapeNormalize(self);
     }
 
+    pub fn getBounds(self: *Shape, border: f64, miterLimit: f64, polarity: i32) Bound {
+        return msShapeGetBounds(self, border, miterLimit, @intCast(polarity));
+    }
+
     pub fn orientContours(self: *Shape) void {
         msShapeOrientContours(self);
     }
 
     pub fn edgeColoringSimple(self: *Shape, angle_threshold: f64, seed: u64) void {
         msEdgeColoringSimple(self, angle_threshold, @intCast(seed));
+    }
+
+    pub fn edgeColoringInkTrap(self: *Shape, angle_threshold: f64, seed: u64) void {
+        msEdgeColoringInkTrap(self, angle_threshold, @intCast(seed));
+    }
+
+    pub fn edgeColoringByDistance(self: *Shape, angle_threshold: f64, seed: u64) void {
+        msEdgeColoringByDistance(self, angle_threshold, @intCast(seed));
     }
 
     pub const GenerateDesc = struct {
@@ -104,12 +116,22 @@ pub const Contour = opaque {
     }
 };
 
+pub const Bound = extern struct {
+    left: f64 = 0.0,
+    bottom: f64 = 0.0,
+    right: f64 = 0.0,
+    top: f64 = 0.0,
+};
+
 extern fn msShapeCreate() ?*Shape;
 extern fn msShapeDestroy(shape: ?*Shape) void;
 extern fn msShapeAddContour(shape: ?*Shape) ?*Contour;
 extern fn msShapeNormalize(cShape: ?*Shape) void;
 extern fn msShapeOrientContours(cShape: ?*Shape) void;
+extern fn msShapeGetBounds(cShape: ?*Shape, border: f64, miterLimit: f64, polarity: c_int) Bound;
 extern fn msEdgeColoringSimple(cShape: ?*Shape, angleThreshold: f64, seed: c_ulonglong) void;
+extern fn msEdgeColoringInkTrap(cShape: ?*Shape, angleThreshold: f64, seed: c_ulonglong) void;
+extern fn msEdgeColoringByDistance(cShape: ?*Shape, angleThreshold: f64, seed: c_ulonglong) void;
 extern fn msContourAddLinearEdge(cContour: ?*Contour, x1: f64, y1: f64, x2: f64, y2: f64) void;
 extern fn msContourAddQuadraticEdge(cContour: ?*Contour, x1: f64, y1: f64, x2: f64, y2: f64, x3: f64, y3: f64) void;
 extern fn msContourAddCubicEdge(cContour: ?*Contour, x1: f64, y1: f64, x2: f64, y2: f64, x3: f64, y3: f64, x4: f64, y4: f64) void;
