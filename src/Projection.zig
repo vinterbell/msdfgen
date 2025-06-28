@@ -2,37 +2,37 @@
 const Projection = @This();
 
 const std = @import("std");
-const msdfgen = @import("root.zig");
+const zmsdf = @import("root.zig");
 
-scale: msdfgen.Vector2,
-translate: msdfgen.Vector2,
+scale: zmsdf.Vector2,
+translate: zmsdf.Vector2,
 
 pub const default: Projection = .{
     .scale = .init(1, 1),
-    .translate = msdfgen.Vector2.zero,
+    .translate = zmsdf.Vector2.zero,
 };
 
-pub fn init(scale: msdfgen.Vector2, translate: msdfgen.Vector2) Projection {
+pub fn init(scale: zmsdf.Vector2, translate: zmsdf.Vector2) Projection {
     return .{ .scale = scale, .translate = translate };
 }
 
 /// Converts the shape coordinate to pixel coordinate.
-pub fn project(self: Projection, coord: msdfgen.Vector2) msdfgen.Vector2 {
+pub fn project(self: Projection, coord: zmsdf.Vector2) zmsdf.Vector2 {
     return self.scale.multiply(coord.add(self.translate));
 }
 
 /// Converts the pixel coordinate to shape coordinate.
-pub fn unproject(self: Projection, coord: msdfgen.Vector2) msdfgen.Vector2 {
+pub fn unproject(self: Projection, coord: zmsdf.Vector2) zmsdf.Vector2 {
     return coord.divide(self.scale).subtract(self.translate);
 }
 
 /// Converts the vector to pixel coordinate space.
-pub fn projectVector(self: Projection, vector: msdfgen.Vector2) msdfgen.Vector2 {
+pub fn projectVector(self: Projection, vector: zmsdf.Vector2) zmsdf.Vector2 {
     return self.scale.multiply(vector);
 }
 
 /// Converts the vector from pixel coordinate space.
-pub fn unprojectVector(self: Projection, vector: msdfgen.Vector2) msdfgen.Vector2 {
+pub fn unprojectVector(self: Projection, vector: zmsdf.Vector2) zmsdf.Vector2 {
     return vector.divide(self.scale);
 }
 

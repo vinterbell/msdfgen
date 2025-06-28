@@ -1,5 +1,7 @@
 const std = @import("std");
-const msdfgen = @import("root.zig");
+const zmsdf = @import("root.zig");
+
+const util = @import("util.zig");
 
 pub const edge_length_precision = 4;
 
@@ -8,14 +10,14 @@ pub const edge_length_precision = 4;
 /// angleThreshold specifies the maximum angle (in radians) to be considered a corner, for example 3 (~172 degrees).
 /// Values below 1/2 PI will be treated as the external angle.
 pub fn edgeColoringSimple(
-    shape: *msdfgen.Shape,
+    shape: *zmsdf.Shape,
     angle_threshold: f64,
     in_seed: u64,
     temp: std.mem.Allocator,
 ) !void {
     var seed = in_seed;
     const cross_threshold = std.math.sin(angle_threshold);
-    var color: msdfgen.EdgeColor = initColor(&seed);
+    var color: zmsdf.EdgeColor = initColor(&seed);
     var corners: std.ArrayListUnmanaged(i32) = .empty;
     defer corners.deinit(temp);
 
@@ -45,7 +47,7 @@ pub fn edgeColoringSimple(
         } else if (corners.items.len == 1) {
             // "teardrop" case
             switchColor(&color, &seed);
-            var colors: [3]msdfgen.EdgeColor = .{
+            var colors: [3]zmsdf.EdgeColor = .{
                 color,
                 .white,
                 .white,
@@ -65,7 +67,7 @@ pub fn edgeColoringSimple(
                 }
             } else if (contour.edges.items.len >= 1) {
                 // Less than three edge segments for three colors => edges must be split
-                var parts: [7]?msdfgen.EdgeSegment = @splat(null);
+                var parts: [7]?zmsdf.EdgeSegment = @splat(null);
                 const part_set_1 = contour.edges.items[0].splitInThirds();
                 parts[0 + 3 * corner] = part_set_1[0];
                 parts[1 + 3 * corner] = part_set_1[1];
@@ -100,7 +102,7 @@ pub fn edgeColoringSimple(
             const start: usize = @intCast(corners.items[0]);
             const m: usize = contour.edges.items.len;
             switchColor(&color, &seed);
-            const initial_color: msdfgen.EdgeColor = color;
+            const initial_color: zmsdf.EdgeColor = color;
             for (0..m) |i| {
                 const index = (start + i) % m;
                 if (spline + 1 < corner_count and corners.items[spline + 1] == index) {
@@ -117,7 +119,7 @@ pub fn edgeColoringSimple(
 /// that use ink traps as a design feature. It guarantees that even if all edges that are shorter than
 /// both their neighboring edges are removed, the coloring remains consistent with the established rules.
 pub fn edgeColoringInkTrap(
-    shape: *msdfgen.Shape,
+    shape: *zmsdf.Shape,
     angle_threshold: f64,
     seed: u64,
 ) void {
@@ -131,7 +133,7 @@ pub fn edgeColoringInkTrap(
 /// distance between all pairs of edges, and perform a graph optimization task, it is much slower
 /// than the rest.
 pub fn edgeColoringByDistance(
-    shape: *msdfgen.Shape,
+    shape: *zmsdf.Shape,
     angle_threshold: f64,
     seed: u64,
 ) void {
@@ -152,16 +154,16 @@ fn symmetricalTrichotomy(position: i32, n: i32) usize {
 }
 
 fn isCorner(
-    a_dir: msdfgen.Vector2,
-    b_dir: msdfgen.Vector2,
+    a_dir: zmsdf.Vector2,
+    b_dir: zmsdf.Vector2,
     cross_threshold: f64,
 ) bool {
-    return msdfgen.Vector2.dot(a_dir, b_dir) <= 0 or
-        @abs(msdfgen.Vector2.cross(a_dir, b_dir)) > cross_threshold;
+    return zmsdf.Vector2.dot(a_dir, b_dir) <= 0 or
+        @abs(zmsdf.Vector2.cross(a_dir, b_dir)) > cross_threshold;
 }
 
 fn estimateLength(
-    edge: msdfgen.EdgeSegment,
+    edge: zmsdf.EdgeSegment,
 ) f64 {
     var length: f64 = 0.0;
     var prev = edge.point(0.0);
@@ -185,13 +187,13 @@ fn seedExtract3(seed: *u64) i32 {
     return v;
 }
 
-fn initColor(seed: *u64) msdfgen.EdgeColor {
-    const colors: [3]msdfgen.EdgeColor = .{ .cyan, .magenta, .yellow };
+fn initColor(seed: *u64) zmsdf.EdgeColor {
+    const colors: [3]zmsdf.EdgeColor = .{ .cyan, .magenta, .yellow };
     return colors[@intCast(seedExtract3(seed))];
 }
 
 fn switchColor(
-    color: *msdfgen.EdgeColor,
+    color: *zmsdf.EdgeColor,
     seed: *u64,
 ) void {
     const shifted = @as(u8, color.toInt() << @as(u3, @intCast(1 + seedExtract2(seed))));
@@ -199,213 +201,97 @@ fn switchColor(
 }
 
 fn switchColorBanned(
-    color: *msdfgen.EdgeColor,
+    color: *zmsdf.EdgeColor,
     seed: *u64,
-    banned: msdfgen.EdgeColor,
+    banned: zmsdf.EdgeColor,
 ) void {
-    var combined: msdfgen.EdgeColor = .{
+    var combined: zmsdf.EdgeColor = .{
         .red_channel = (color.red_channel and banned.red_channel),
         .green_channel = (color.green_channel and banned.green_channel),
         .blue_channel = (color.blue_channel and banned.blue_channel),
     };
     if (combined.eql(.red) or combined.eql(.green) or combined.eql(.blue)) {
-        color.* = .fromInt(combined.toInt() ^ msdfgen.EdgeColor.white.toInt());
+        color.* = .fromInt(combined.toInt() ^ zmsdf.EdgeColor.white.toInt());
     } else {
         switchColor(color, seed);
     }
 }
 
-// namespace msdfgen {
+// EDGE COLORING BY DISTANCE - EXPERIMENTAL IMPLEMENTATION - WORK IN PROGRESS
+// const max_recolor_steps = 16;
+// const edge_distance_precision = 16;
 
-// struct EdgeColoringInkTrapCorner {
-//     int index;
-//     double prevEdgeLengthEstimate;
-//     bool minor;
-//     EdgeColor color;
-// };
+// fn edgeToEdgeDistance(a: *const zmsdf.EdgeSegment, b: *const zmsdf.EdgeSegment, precision: u32) f64 {
+//     if (a.point(0).eql(b.point(0)) or
+//         a.point(0).eql(b.point(1)) or
+//         a.point(1).eql(b.point(0)) or
+//         a.point(1).eql(b.point(1)))
+//     {
+//         return 0.0;
+//     }
 
-// void edgeColoringInkTrap(Shape &shape, double angleThreshold, unsigned long long seed) {
-//     typedef EdgeColoringInkTrapCorner Corner;
-//     double crossThreshold = sin(angleThreshold);
-//     EdgeColor color = initColor(seed);
-//     std::vector<Corner, Allocator<Corner>> corners;
-//     for (std::vector<Contour, Allocator<Contour>>::iterator contour = shape.contours.begin(); contour != shape.contours.end(); ++contour) {
-//         if (contour->edges.empty())
-//             continue;
-//         double splineLength = 0;
-//         { // Identify corners
-//             corners.clear();
-//             Vector2 prevDirection = contour->edges.back()->direction(1);
-//             int index = 0;
-//             for (std::vector<EdgeHolder, Allocator<EdgeHolder>>::const_iterator edge = contour->edges.begin(); edge != contour->edges.end(); ++edge, ++index) {
-//                 if (isCorner(prevDirection.normalize(), (*edge)->direction(0).normalize(), crossThreshold)) {
-//                     Corner corner = { index, splineLength };
-//                     corners.push_back(corner);
-//                     splineLength = 0;
-//                 }
-//                 splineLength += estimateEdgeLength(*edge);
-//                 prevDirection = (*edge)->direction(1);
-//             }
-//         }
+//     const i_fac: f64 = 1.0 / @as(f64, @floatFromInt(precision));
+//     var min_distance = b.point(0).subtract(a.point(0)).length();
+//     for (0..precision + 1) |i| {
+//         const t: f64 = i_fac * @as(f64, @floatFromInt(i));
+//         const d = @abs(a.signedDistance(b.point(t), t).distance.distance);
+//         min_distance = @min(min_distance, d);
+//     }
+//     for (0..precision + 1) |i| {
+//         const t: f64 = i_fac * @as(f64, @floatFromInt(i));
+//         const d = @abs(b.signedDistance(a.point(t), t).distance.distance);
+//         min_distance = @min(min_distance, d);
+//     }
+//     return min_distance;
+// }
 
-//         // Smooth contour
-//         if (corners.empty()) {
-//             switchColor(color, seed);
-//             for (std::vector<EdgeHolder, Allocator<EdgeHolder>>::iterator edge = contour->edges.begin(); edge != contour->edges.end(); ++edge)
-//                 (*edge)->color = color;
+// fn splineToSplineDistance(a_segments: []const zmsdf.EdgeSegment, b_segments: []const zmsdf.EdgeSegment, precision: u32) f64 {
+//     var min_distance: f64 = util.f64_max;
+//     for (a_segments) |a| {
+//         for (b_segments) |b| {
+//             const d = edgeToEdgeDistance(&a, &b, precision);
+//             min_distance = @min(min_distance, d);
 //         }
-//         // "Teardrop" case
-//         else if (corners.size() == 1) {
-//             EdgeColor colors[3];
-//             switchColor(color, seed);
-//             colors[0] = color;
-//             colors[1] = WHITE;
-//             switchColor(color, seed);
-//             colors[2] = color;
-//             int corner = corners[0].index;
-//             if (contour->edges.size() >= 3) {
-//                 int m = (int) contour->edges.size();
-//                 for (int i = 0; i < m; ++i)
-//                     contour->edges[(corner+i)%m]->color = colors[1+symmetricalTrichotomy(i, m)];
-//             } else if (contour->edges.size() >= 1) {
-//                 // Less than three edge segments for three colors => edges must be split
-//                 EdgeSegment *parts[7] = { };
-//                 contour->edges[0]->splitInThirds(parts[0+3*corner], parts[1+3*corner], parts[2+3*corner]);
-//                 if (contour->edges.size() >= 2) {
-//                     contour->edges[1]->splitInThirds(parts[3-3*corner], parts[4-3*corner], parts[5-3*corner]);
-//                     parts[0]->color = parts[1]->color = colors[0];
-//                     parts[2]->color = parts[3]->color = colors[1];
-//                     parts[4]->color = parts[5]->color = colors[2];
-//                 } else {
-//                     parts[0]->color = colors[0];
-//                     parts[1]->color = colors[1];
-//                     parts[2]->color = colors[2];
-//                 }
-//                 contour->edges.clear();
-//                 for (int i = 0; parts[i]; ++i)
-//                     contour->edges.push_back(EdgeHolder(parts[i]));
+//     }
+//     return min_distance;
+// }
+
+// inline fn invertInt(value: anytype) @TypeOf(value) {
+//     return if (value == 0) return 1 else 0;
+// }
+
+// fn colorSecondDegreeGraph(coloring: []u8, edge_matrix: []const []const u8, vertex_count: usize, seed_constant: u64) void {
+//     var seed = seed_constant;
+//     for (0..vertex_count) |i| {
+//         var possible_colors: u8 = 7;
+//         for (0..i) |j| {
+//             if (edge_matrix[i][j] != 0) {
+//                 possible_colors &= ~(1 << @intCast(coloring[j]));
 //             }
 //         }
-//         // Multiple corners
-//         else {
-//             int cornerCount = (int) corners.size();
-//             int majorCornerCount = cornerCount;
-//             if (cornerCount > 3) {
-//                 corners.begin()->prevEdgeLengthEstimate += splineLength;
-//                 for (int i = 0; i < cornerCount; ++i) {
-//                     if (
-//                         corners[i].prevEdgeLengthEstimate > corners[(i+1)%cornerCount].prevEdgeLengthEstimate &&
-//                         corners[(i+1)%cornerCount].prevEdgeLengthEstimate < corners[(i+2)%cornerCount].prevEdgeLengthEstimate
-//                     ) {
-//                         corners[i].minor = true;
-//                         --majorCornerCount;
-//                     }
-//                 }
-//             }
-//             EdgeColor initialColor = BLACK;
-//             for (int i = 0; i < cornerCount; ++i) {
-//                 if (!corners[i].minor) {
-//                     --majorCornerCount;
-//                     switchColor(color, seed, EdgeColor(!majorCornerCount*initialColor));
-//                     corners[i].color = color;
-//                     if (!initialColor)
-//                         initialColor = color;
-//                 }
-//             }
-//             for (int i = 0; i < cornerCount; ++i) {
-//                 if (corners[i].minor) {
-//                     EdgeColor nextColor = corners[(i+1)%cornerCount].color;
-//                     corners[i].color = EdgeColor((color&nextColor)^WHITE);
-//                 } else
-//                     color = corners[i].color;
-//             }
-//             int spline = 0;
-//             int start = corners[0].index;
-//             color = corners[0].color;
-//             int m = (int) contour->edges.size();
-//             for (int i = 0; i < m; ++i) {
-//                 int index = (start+i)%m;
-//                 if (spline+1 < cornerCount && corners[spline+1].index == index)
-//                     color = corners[++spline].color;
-//                 contour->edges[index]->color = color;
-//             }
+//         var color: zmsdf.EdgeColor = .black;
+//         switch (possible_colors) {
+//             1 => color = .fromInt(0),
+//             2 => color = .fromInt(1),
+//             3 => color = .fromInt(seedExtract2(&seed)), // 0 or 1
+//             4 => color = .fromInt(2),
+//             5 => color = .fromInt((@as(u8, invertInt(seedExtract2(&seed))) << 1)), // 2 or 0
+//             6 => color = .fromInt(seedExtract2(&seed) + 1), // 1 or 2
+//             7 => color = .fromInt((seedExtract3(&seed) + i) % 3), // 0 or 1 or 2
+//             else => unreachable,
 //         }
+//         coloring[i] = color.toInt();
 //     }
 // }
 
-// // EDGE COLORING BY DISTANCE - EXPERIMENTAL IMPLEMENTATION - WORK IN PROGRESS
-// #define MAX_RECOLOR_STEPS 16
-// #define EDGE_DISTANCE_PRECISION 16
-
-// static double edgeToEdgeDistance(const EdgeSegment &a, const EdgeSegment &b, int precision) {
-//     if (a.point(0) == b.point(0) || a.point(0) == b.point(1) || a.point(1) == b.point(0) || a.point(1) == b.point(1))
-//         return 0;
-//     double iFac = 1./precision;
-//     double minDistance = (b.point(0)-a.point(0)).length();
-//     for (int i = 0; i <= precision; ++i) {
-//         double t = iFac*i;
-//         double d = fabs(a.signedDistance(b.point(t), t).distance);
-//         minDistance = min(minDistance, d);
-//     }
-//     for (int i = 0; i <= precision; ++i) {
-//         double t = iFac*i;
-//         double d = fabs(b.signedDistance(a.point(t), t).distance);
-//         minDistance = min(minDistance, d);
-//     }
-//     return minDistance;
-// }
-
-// static double splineToSplineDistance(EdgeSegment *const *edgeSegments, int aStart, int aEnd, int bStart, int bEnd, int precision) {
-//     double minDistance = DBL_MAX;
-//     for (int ai = aStart; ai < aEnd; ++ai)
-//         for (int bi = bStart; bi < bEnd && minDistance; ++bi) {
-//             double d = edgeToEdgeDistance(*edgeSegments[ai], *edgeSegments[bi], precision);
-//             minDistance = min(minDistance, d);
+// fn vertexPossibleColors(coloring: []const u8, edge_vector: []const u8, vertex_count: usize) u8 {
+//     var used_colors: u8 = 0;
+//     for (0..vertex_count) |i| {
+//         if (edge_vector[i] != 0) {
+//             used_colors |= 1 << @intCast(coloring[i]);
 //         }
-//     return minDistance;
-// }
-
-// static void colorSecondDegreeGraph(int *coloring, const int *const *edgeMatrix, int vertexCount, unsigned long long seed) {
-//     for (int i = 0; i < vertexCount; ++i) {
-//         int possibleColors = 7;
-//         for (int j = 0; j < i; ++j) {
-//             if (edgeMatrix[i][j])
-//                 possibleColors &= ~(1<<coloring[j]);
-//         }
-//         int color = 0;
-//         switch (possibleColors) {
-//             case 1:
-//                 color = 0;
-//                 break;
-//             case 2:
-//                 color = 1;
-//                 break;
-//             case 3:
-//                 color = seedExtract2(seed); // 0 or 1
-//                 break;
-//             case 4:
-//                 color = 2;
-//                 break;
-//             case 5:
-//                 color = (int) !seedExtract2(seed)<<1; // 2 or 0
-//                 break;
-//             case 6:
-//                 color = seedExtract2(seed)+1; // 1 or 2
-//                 break;
-//             case 7:
-//                 color = (seedExtract3(seed)+i)%3; // 0 or 1 or 2
-//                 break;
-//         }
-//         coloring[i] = color;
 //     }
-// }
-
-// static int vertexPossibleColors(const int *coloring, const int *edgeVector, int vertexCount) {
-//     int usedColors = 0;
-//     for (int i = 0; i < vertexCount; ++i)
-//         if (edgeVector[i])
-//             usedColors |= 1<<coloring[i];
-//     return 7&~usedColors;
+//     return 7 & ~used_colors;
 // }
 
 // static void uncolorSameNeighbors(std::queue<int> &uncolored, int *coloring, const int *const *edgeMatrix, int vertex, int vertexCount) {
@@ -601,6 +487,124 @@ fn switchColorBanned(
 //         if (splineStarts[spline+1] == i)
 //             ++spline;
 //         edgeSegments[i]->color = colors[coloring[spline]];
+//     }
+// }
+
+// namespace zmsdf {
+
+// struct EdgeColoringInkTrapCorner {
+//     int index;
+//     double prevEdgeLengthEstimate;
+//     bool minor;
+//     EdgeColor color;
+// };
+
+// void edgeColoringInkTrap(Shape &shape, double angleThreshold, unsigned long long seed) {
+//     typedef EdgeColoringInkTrapCorner Corner;
+//     double crossThreshold = sin(angleThreshold);
+//     EdgeColor color = initColor(seed);
+//     std::vector<Corner, Allocator<Corner>> corners;
+//     for (std::vector<Contour, Allocator<Contour>>::iterator contour = shape.contours.begin(); contour != shape.contours.end(); ++contour) {
+//         if (contour->edges.empty())
+//             continue;
+//         double splineLength = 0;
+//         { // Identify corners
+//             corners.clear();
+//             Vector2 prevDirection = contour->edges.back()->direction(1);
+//             int index = 0;
+//             for (std::vector<EdgeHolder, Allocator<EdgeHolder>>::const_iterator edge = contour->edges.begin(); edge != contour->edges.end(); ++edge, ++index) {
+//                 if (isCorner(prevDirection.normalize(), (*edge)->direction(0).normalize(), crossThreshold)) {
+//                     Corner corner = { index, splineLength };
+//                     corners.push_back(corner);
+//                     splineLength = 0;
+//                 }
+//                 splineLength += estimateEdgeLength(*edge);
+//                 prevDirection = (*edge)->direction(1);
+//             }
+//         }
+
+//         // Smooth contour
+//         if (corners.empty()) {
+//             switchColor(color, seed);
+//             for (std::vector<EdgeHolder, Allocator<EdgeHolder>>::iterator edge = contour->edges.begin(); edge != contour->edges.end(); ++edge)
+//                 (*edge)->color = color;
+//         }
+//         // "Teardrop" case
+//         else if (corners.size() == 1) {
+//             EdgeColor colors[3];
+//             switchColor(color, seed);
+//             colors[0] = color;
+//             colors[1] = WHITE;
+//             switchColor(color, seed);
+//             colors[2] = color;
+//             int corner = corners[0].index;
+//             if (contour->edges.size() >= 3) {
+//                 int m = (int) contour->edges.size();
+//                 for (int i = 0; i < m; ++i)
+//                     contour->edges[(corner+i)%m]->color = colors[1+symmetricalTrichotomy(i, m)];
+//             } else if (contour->edges.size() >= 1) {
+//                 // Less than three edge segments for three colors => edges must be split
+//                 EdgeSegment *parts[7] = { };
+//                 contour->edges[0]->splitInThirds(parts[0+3*corner], parts[1+3*corner], parts[2+3*corner]);
+//                 if (contour->edges.size() >= 2) {
+//                     contour->edges[1]->splitInThirds(parts[3-3*corner], parts[4-3*corner], parts[5-3*corner]);
+//                     parts[0]->color = parts[1]->color = colors[0];
+//                     parts[2]->color = parts[3]->color = colors[1];
+//                     parts[4]->color = parts[5]->color = colors[2];
+//                 } else {
+//                     parts[0]->color = colors[0];
+//                     parts[1]->color = colors[1];
+//                     parts[2]->color = colors[2];
+//                 }
+//                 contour->edges.clear();
+//                 for (int i = 0; parts[i]; ++i)
+//                     contour->edges.push_back(EdgeHolder(parts[i]));
+//             }
+//         }
+//         // Multiple corners
+//         else {
+//             int cornerCount = (int) corners.size();
+//             int majorCornerCount = cornerCount;
+//             if (cornerCount > 3) {
+//                 corners.begin()->prevEdgeLengthEstimate += splineLength;
+//                 for (int i = 0; i < cornerCount; ++i) {
+//                     if (
+//                         corners[i].prevEdgeLengthEstimate > corners[(i+1)%cornerCount].prevEdgeLengthEstimate &&
+//                         corners[(i+1)%cornerCount].prevEdgeLengthEstimate < corners[(i+2)%cornerCount].prevEdgeLengthEstimate
+//                     ) {
+//                         corners[i].minor = true;
+//                         --majorCornerCount;
+//                     }
+//                 }
+//             }
+//             EdgeColor initialColor = BLACK;
+//             for (int i = 0; i < cornerCount; ++i) {
+//                 if (!corners[i].minor) {
+//                     --majorCornerCount;
+//                     switchColor(color, seed, EdgeColor(!majorCornerCount*initialColor));
+//                     corners[i].color = color;
+//                     if (!initialColor)
+//                         initialColor = color;
+//                 }
+//             }
+//             for (int i = 0; i < cornerCount; ++i) {
+//                 if (corners[i].minor) {
+//                     EdgeColor nextColor = corners[(i+1)%cornerCount].color;
+//                     corners[i].color = EdgeColor((color&nextColor)^WHITE);
+//                 } else
+//                     color = corners[i].color;
+//             }
+//             int spline = 0;
+//             int start = corners[0].index;
+//             color = corners[0].color;
+//             int m = (int) contour->edges.size();
+//             for (int i = 0; i < m; ++i) {
+//                 int index = (start+i)%m;
+//                 if (spline+1 < cornerCount && corners[spline+1].index == index)
+//                     color = corners[++spline].color;
+//                 contour->edges[index]->color = color;
+//             }
+//         }
 //     }
 // }
 

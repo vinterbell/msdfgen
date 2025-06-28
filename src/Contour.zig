@@ -1,13 +1,13 @@
 const Contour = @This();
 
 const std = @import("std");
-const msdfgen = @import("root.zig");
+const zmsdf = @import("root.zig");
 
 const util = @import("util.zig");
 
 // please use this when modifying edges
 allocator: std.mem.Allocator,
-edges: std.ArrayListUnmanaged(msdfgen.EdgeSegment),
+edges: std.ArrayListUnmanaged(zmsdf.EdgeSegment),
 
 pub fn init(allocator: std.mem.Allocator) Contour {
     return .{
@@ -20,20 +20,20 @@ pub fn deinit(self: *Contour) void {
     self.edges.deinit(self.allocator);
 }
 
-pub fn bound(self: Contour, bounds: *msdfgen.Bounds) void {
+pub fn bound(self: Contour, bounds: *zmsdf.Bounds) void {
     for (self.edges.items) |edge| {
         edge.bound(bounds);
     }
 }
 
-pub fn boundMiters(self: Contour, bounds: *msdfgen.Bounds, border: f64, miter_limit: f64, polarity: i32) void {
+pub fn boundMiters(self: Contour, bounds: *zmsdf.Bounds, border: f64, miter_limit: f64, polarity: i32) void {
     if (self.edges.items.len == 0) return;
     var prev_dir = self.edges.getLast().direction(1.0).normalize(true);
     for (self.edges.items) |edge| {
         const dir = edge.direction(0.0).normalize(true).multiplyByScalar(-1);
-        if (msdfgen.Vector2.cross(prev_dir, dir) * @as(f64, @floatFromInt(polarity)) >= 0) {
+        if (zmsdf.Vector2.cross(prev_dir, dir) * @as(f64, @floatFromInt(polarity)) >= 0) {
             var miter_len = miter_limit;
-            const q = 0.5 * (1 - msdfgen.Vector2.dot(prev_dir, dir));
+            const q = 0.5 * (1 - zmsdf.Vector2.dot(prev_dir, dir));
             if (q > 0) {
                 miter_len = @min(1 / @sqrt(q), miter_limit);
             }
@@ -44,7 +44,7 @@ pub fn boundMiters(self: Contour, bounds: *msdfgen.Bounds, border: f64, miter_li
     }
 }
 
-pub fn winding(self: Contour) msdfgen.Polarity {
+pub fn winding(self: Contour) zmsdf.Polarity {
     if (self.edges.items.len == 0) return .pos;
     var total: f64 = 0.0;
     if (self.edges.items.len == 1) {
@@ -75,12 +75,12 @@ pub fn winding(self: Contour) msdfgen.Polarity {
     return .of(total);
 }
 
-fn shoelace(a: msdfgen.Vector2, b: msdfgen.Vector2) f64 {
+fn shoelace(a: zmsdf.Vector2, b: zmsdf.Vector2) f64 {
     return (b.x - a.x) * (b.y + a.y);
 }
 
 pub fn reverse(self: *Contour) void {
-    std.mem.reverse(msdfgen.EdgeSegment, self.edges.items);
+    std.mem.reverse(zmsdf.EdgeSegment, self.edges.items);
     for (self.edges.items) |*edge| {
         edge.* = edge.reverse();
     }

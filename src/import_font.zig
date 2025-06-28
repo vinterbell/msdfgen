@@ -1,7 +1,7 @@
 const std = @import("std");
-const msdfgen = @import("root.zig");
+const zmsdf = @import("root.zig");
 
-const TrueType = msdfgen.TrueType;
+const TrueType = zmsdf.TrueType;
 
 /// The scaling applied to font glyph coordinates when loading a glyph
 pub const FontCoordinateScaling = enum {
@@ -25,7 +25,7 @@ fn msVector(
     x: i16,
     y: i16,
     scale: f64,
-) msdfgen.Vector2 {
+) zmsdf.Vector2 {
     return .{
         .x = @as(f64, @floatFromInt(x)) * scale,
         .y = @as(f64, @floatFromInt(y)) * scale,
@@ -33,11 +33,11 @@ fn msVector(
 }
 
 fn readTrueTypeOutline(
-    shape: *msdfgen.Shape,
+    shape: *zmsdf.Shape,
     outline: []const TrueType.Vertex,
     scale: f64,
 ) !void {
-    var position: msdfgen.Vector2 = .zero;
+    var position: zmsdf.Vector2 = .zero;
 
     var contour_start_ends: [256]struct { usize, usize } = @splat(undefined);
     var contour_count: usize = 0;
@@ -62,7 +62,7 @@ fn readTrueTypeOutline(
     }
 
     for (0..contour_count) |contour_index| {
-        var contour: msdfgen.Contour = .init(shape.allocator);
+        var contour: zmsdf.Contour = .init(shape.allocator);
         const start, const end = contour_start_ends[contour_index];
         for (start..end) |vertex_index| {
             const vertex = outline[vertex_index];
@@ -115,7 +115,7 @@ fn readTrueTypeOutline(
 pub fn loadGlyph(
     ttf: *const TrueType,
     temp: std.mem.Allocator,
-    shape: *msdfgen.Shape,
+    shape: *zmsdf.Shape,
     glyph_index: TrueType.GlyphIndex,
     scaling: FontCoordinateScaling,
 ) !void {

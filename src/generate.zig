@@ -1,5 +1,5 @@
 const std = @import("std");
-const msdfgen = @import("root.zig");
+const zmsdf = @import("root.zig");
 
 /// The configuration of the MSDF error correction pass.
 pub const ErrorCorrectionConfig = struct {
@@ -46,6 +46,7 @@ pub const GeneratorConfig = struct {
     /// Specifies whether to use the version of the algorithm that supports overlapping contours with the same winding. May be set to false to improve performance when no such contours are present.
     overlap_support: bool,
 
+    /// Must set allocator before using this config.
     pub const default: GeneratorConfig = .{
         .allocator = undefined, // Must be set by the caller.
         .overlap_support = true,
@@ -56,6 +57,7 @@ pub const MSDFGeneratorConfig = struct {
     generator: GeneratorConfig,
     error_correction: ErrorCorrectionConfig,
 
+    /// Must set allocator in `generator` before using this config.
     pub const default: MSDFGeneratorConfig = .{
         .generator = .default,
         .error_correction = .default,
@@ -69,25 +71,25 @@ pub fn DistancePixelConversion(
         const Self = @This();
 
         pub const BitmapRefType = switch (DistanceType) {
-            f64 => msdfgen.BitmapRef(f32, 1),
-            msdfgen.MultiDistance => msdfgen.BitmapRef(f32, 3),
-            msdfgen.MultiAndTrueDistance => msdfgen.BitmapRef(f32, 4),
+            f64 => zmsdf.BitmapRef(f32, 1),
+            zmsdf.MultiDistance => zmsdf.BitmapRef(f32, 3),
+            zmsdf.MultiAndTrueDistance => zmsdf.BitmapRef(f32, 4),
             else => @compileError("Unsupported DistanceType " ++ @typeName(DistanceType)),
         };
 
-        mapping: msdfgen.DistanceMapping,
+        mapping: zmsdf.DistanceMapping,
 
         pub fn getPixelFloat(self: Self, distance: f32, out_pixels: []f32) void {
             out_pixels[0] = @floatCast(self.mapping.of(distance));
         }
 
-        pub fn getPixelMultiDistance(self: Self, distance: msdfgen.MultiDistance, out_pixels: []f32) void {
+        pub fn getPixelMultiDistance(self: Self, distance: zmsdf.MultiDistance, out_pixels: []f32) void {
             out_pixels[0] = @floatCast(self.mapping.of(distance.r));
             out_pixels[1] = @floatCast(self.mapping.of(distance.g));
             out_pixels[2] = @floatCast(self.mapping.of(distance.b));
         }
 
-        pub fn getPixelMultiAndTrueDistance(self: Self, distance: msdfgen.MultiAndTrueDistance, out_pixels: []f32) void {
+        pub fn getPixelMultiAndTrueDistance(self: Self, distance: zmsdf.MultiAndTrueDistance, out_pixels: []f32) void {
             out_pixels[0] = @floatCast(self.mapping.of(distance.r));
             out_pixels[1] = @floatCast(self.mapping.of(distance.g));
             out_pixels[2] = @floatCast(self.mapping.of(distance.b));
@@ -97,8 +99,8 @@ pub fn DistancePixelConversion(
         pub fn getPixel(self: Self, distance: anytype, out_pixels: []f32) void {
             switch (DistanceType) {
                 f64 => self.getPixelFloat(distance, out_pixels),
-                msdfgen.MultiDistance => self.getPixelMultiDistance(distance, out_pixels),
-                msdfgen.MultiAndTrueDistance => self.getPixelMultiAndTrueDistance(distance, out_pixels),
+                zmsdf.MultiDistance => self.getPixelMultiDistance(distance, out_pixels),
+                zmsdf.MultiAndTrueDistance => self.getPixelMultiAndTrueDistance(distance, out_pixels),
                 else => @compileError("Unsupported DistanceType " ++ @typeName(DistanceType)),
             }
         }
@@ -108,15 +110,15 @@ pub fn DistancePixelConversion(
 pub fn generateDistanceField(
     comptime ContourCombiner: type,
     output: DistancePixelConversion(ContourCombiner.DistanceType).BitmapRefType,
-    shape: *const msdfgen.Shape,
-    transformation: msdfgen.SDFTransformation,
+    shape: *const zmsdf.Shape,
+    transformation: zmsdf.SDFTransformation,
     temp: std.mem.Allocator,
 ) !void {
     const distance_pixel_conversion: DistancePixelConversion(ContourCombiner.DistanceType) = .{
         .mapping = transformation.distance_mapping,
     };
     {
-        var distance_finder: msdfgen.ShapeDistanceFinder(ContourCombiner) = try .init(temp, shape);
+        var distance_finder: zmsdf.ShapeDistanceFinder(ContourCombiner) = try .init(temp, shape);
         defer distance_finder.deinit();
         var right_to_left = false;
 
@@ -137,15 +139,15 @@ pub fn generateDistanceField(
     }
 }
 
-pub fn generateMSDF(
-    output: msdfgen.BitmapRef(f32, 3),
-    shape: *const msdfgen.Shape,
-    transformation: msdfgen.SDFTransformation,
-    config: MSDFGeneratorConfig,
+pub fn generateSDF(
+    output: zmsdf.BitmapRef(f32, 1),
+    shape: *const zmsdf.Shape,
+    transformation: zmsdf.SDFTransformation,
+    config: GeneratorConfig,
 ) !void {
     if (config.generator.overlap_support) {
         try generateDistanceField(
-            msdfgen.OverlappingMultiDistanceContourCombiner,
+            zmsdf.OverlappingTrueDistanceContourCombiner,
             output,
             shape,
             transformation,
@@ -153,7 +155,7 @@ pub fn generateMSDF(
         );
     } else {
         try generateDistanceField(
-            msdfgen.MultiDistanceSimpleContourCombiner,
+            zmsdf.SimpleTrueDistanceContourCombiner,
             output,
             shape,
             transformation,
@@ -162,4 +164,58 @@ pub fn generateMSDF(
     }
 
     // TODO: Implement error correction for MSDF
+}
+
+pub fn generateMSDF(
+    output: zmsdf.BitmapRef(f32, 3),
+    shape: *const zmsdf.Shape,
+    transformation: zmsdf.SDFTransformation,
+    config: MSDFGeneratorConfig,
+) !void {
+    if (config.generator.overlap_support) {
+        try generateDistanceField(
+            zmsdf.OverlappingMultiDistanceContourCombiner,
+            output,
+            shape,
+            transformation,
+            config.generator.allocator,
+        );
+    } else {
+        try generateDistanceField(
+            zmsdf.SimpleMultiDistanceContourCombiner,
+            output,
+            shape,
+            transformation,
+            config.generator.allocator,
+        );
+    }
+
+    // TODO: Implement error correction for MSDF
+}
+
+pub fn generateMTSDF(
+    output: zmsdf.BitmapRef(f32, 4),
+    shape: *const zmsdf.Shape,
+    transformation: zmsdf.SDFTransformation,
+    config: MSDFGeneratorConfig,
+) !void {
+    if (config.generator.overlap_support) {
+        try generateDistanceField(
+            zmsdf.OverlappingMultiAndTrueDistanceContourCombiner,
+            output,
+            shape,
+            transformation,
+            config.generator.allocator,
+        );
+    } else {
+        try generateDistanceField(
+            zmsdf.SimpleMultiAndTrueDistanceContourCombiner,
+            output,
+            shape,
+            transformation,
+            config.generator.allocator,
+        );
+    }
+
+    // TODO: Implement error correction for MTSDF
 }

@@ -2,7 +2,6 @@
 const Scanline = @This();
 
 const std = @import("std");
-const msdfgen = @import("root.zig");
 
 const util = @import("util.zig");
 

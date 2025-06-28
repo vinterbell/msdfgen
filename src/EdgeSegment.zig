@@ -1,5 +1,5 @@
 const std = @import("std");
-const msdfgen = @import("root.zig");
+const zmsdf = @import("root.zig");
 
 const util = @import("util.zig");
 const equation_solver = @import("equation_solver.zig");
@@ -7,8 +7,8 @@ const equation_solver = @import("equation_solver.zig");
 const EdgeSegment = @This();
 
 kind: Kind,
-color: msdfgen.EdgeColor,
-points: [4]msdfgen.Vector2,
+color: zmsdf.EdgeColor,
+points: [4]zmsdf.Vector2,
 
 pub const cubic_search_starts = 4;
 pub const cubic_search_steps = 4;
@@ -19,13 +19,13 @@ pub const Kind = enum(u8) {
     cubic,
 };
 
-const dot = msdfgen.Vector2.dot;
-const mixVec2 = msdfgen.Vector2.lerp;
+const dot = zmsdf.Vector2.dot;
+const mixVec2 = zmsdf.Vector2.lerp;
 
 pub fn create2(
-    p0: msdfgen.Vector2,
-    p1: msdfgen.Vector2,
-    color: msdfgen.EdgeColor,
+    p0: zmsdf.Vector2,
+    p1: zmsdf.Vector2,
+    color: zmsdf.EdgeColor,
 ) EdgeSegment {
     return .{
         .kind = .linear,
@@ -40,12 +40,12 @@ pub fn create2(
 }
 
 pub fn create3(
-    p0: msdfgen.Vector2,
-    p1: msdfgen.Vector2,
-    p2: msdfgen.Vector2,
-    color: msdfgen.EdgeColor,
+    p0: zmsdf.Vector2,
+    p1: zmsdf.Vector2,
+    p2: zmsdf.Vector2,
+    color: zmsdf.EdgeColor,
 ) EdgeSegment {
-    const cross = msdfgen.Vector2.cross(p1.subtract(p0), p2.subtract(p1));
+    const cross = zmsdf.Vector2.cross(p1.subtract(p0), p2.subtract(p1));
     if (cross == 0.0) return create2(p0, p2, color);
     return .{
         .kind = .quadratic,
@@ -60,15 +60,15 @@ pub fn create3(
 }
 
 pub fn create4(
-    p0: msdfgen.Vector2,
-    p1: msdfgen.Vector2,
-    p2: msdfgen.Vector2,
-    p3: msdfgen.Vector2,
-    color: msdfgen.EdgeColor,
+    p0: zmsdf.Vector2,
+    p1: zmsdf.Vector2,
+    p2: zmsdf.Vector2,
+    p3: zmsdf.Vector2,
+    color: zmsdf.EdgeColor,
 ) EdgeSegment {
     var p12 = p2.subtract(p1);
-    if (msdfgen.Vector2.cross(p1.subtract(p0), p12) == 0 and
-        msdfgen.Vector2.cross(p12, p3.subtract(p2)) == 0)
+    if (zmsdf.Vector2.cross(p1.subtract(p0), p12) == 0 and
+        zmsdf.Vector2.cross(p12, p3.subtract(p2)) == 0)
     {
         return create2(p0, p3, color);
     }
@@ -89,13 +89,13 @@ pub fn create4(
     };
 }
 
-pub fn distanceToPerpendicularDistance(self: EdgeSegment, origin: msdfgen.Vector2, param: f64) ?msdfgen.SignedDistance {
+pub fn distanceToPerpendicularDistance(self: EdgeSegment, origin: zmsdf.Vector2, param: f64) ?zmsdf.SignedDistance {
     if (param < 0) {
         const dir = self.direction(0).normalize(false);
         const aq = origin.subtract(self.points[0]);
         const ts = dot(aq, dir);
         if (ts < 0) {
-            const perpendicular_distance = msdfgen.Vector2.cross(aq, dir);
+            const perpendicular_distance = zmsdf.Vector2.cross(aq, dir);
             return .{
                 .distance = perpendicular_distance,
                 .dot = 0,
@@ -106,7 +106,7 @@ pub fn distanceToPerpendicularDistance(self: EdgeSegment, origin: msdfgen.Vector
         const bq = origin.subtract(self.points[1]);
         const ts = dot(bq, dir);
         if (ts > 0) {
-            const perpendicular_distance = msdfgen.Vector2.cross(bq, dir);
+            const perpendicular_distance = zmsdf.Vector2.cross(bq, dir);
             return .{
                 .distance = perpendicular_distance,
                 .dot = 0,
@@ -117,7 +117,7 @@ pub fn distanceToPerpendicularDistance(self: EdgeSegment, origin: msdfgen.Vector
     return null;
 }
 
-pub fn point(self: EdgeSegment, param: f64) msdfgen.Vector2 {
+pub fn point(self: EdgeSegment, param: f64) zmsdf.Vector2 {
     switch (self.kind) {
         .linear => {
             return self.points[0].lerp(self.points[1], param);
@@ -138,7 +138,7 @@ pub fn point(self: EdgeSegment, param: f64) msdfgen.Vector2 {
     }
 }
 
-pub fn direction(self: EdgeSegment, param: f64) msdfgen.Vector2 {
+pub fn direction(self: EdgeSegment, param: f64) zmsdf.Vector2 {
     switch (self.kind) {
         .linear => {
             return self.points[1].subtract(self.points[0]);
@@ -161,7 +161,7 @@ pub fn direction(self: EdgeSegment, param: f64) msdfgen.Vector2 {
     }
 }
 
-pub fn directionChange(self: EdgeSegment, param: f64) msdfgen.Vector2 {
+pub fn directionChange(self: EdgeSegment, param: f64) zmsdf.Vector2 {
     switch (self.kind) {
         .linear => {
             return .zero;
@@ -191,7 +191,7 @@ pub fn length(self: EdgeSegment) ?f64 {
             const brbr = dot(br, br);
             const abLen = @sqrt(abab);
             const brLen = @sqrt(brbr);
-            const crs = msdfgen.Vector2.cross(ab, br);
+            const crs = zmsdf.Vector2.cross(ab, br);
             const h = @sqrt(abab + abbr + abbr + brbr);
             return (brLen * ((abbr + brbr) * h - abbr * abLen) +
                 crs * crs * @log((brLen * h + abbr + brbr) / (brLen * abLen + abbr))) / (brbr * brLen);
@@ -200,9 +200,9 @@ pub fn length(self: EdgeSegment) ?f64 {
     }
 }
 
-pub fn signedDistance(self: EdgeSegment, origin: msdfgen.Vector2) struct {
+pub fn signedDistance(self: EdgeSegment, origin: zmsdf.Vector2) struct {
     alpha: f64,
-    distance: msdfgen.SignedDistance,
+    distance: zmsdf.SignedDistance,
 } {
     switch (self.kind) {
         .linear => {
@@ -223,7 +223,7 @@ pub fn signedDistance(self: EdgeSegment, origin: msdfgen.Vector2) struct {
             return .{
                 .alpha = alpha,
                 .distance = .init(
-                    util.nonZeroSign(f64, msdfgen.Vector2.cross(aq, ab)) * endpoint_distance,
+                    util.nonZeroSign(f64, zmsdf.Vector2.cross(aq, ab)) * endpoint_distance,
                     @abs(dot(ab.normalize(false), eq.normalize(false))),
                 ),
             };
@@ -239,7 +239,7 @@ pub fn signedDistance(self: EdgeSegment, origin: msdfgen.Vector2) struct {
 
             const solutions = equation_solver.solveCubic(a, b, c, d);
             var ep_dir = self.direction(0.0);
-            var min_distance = util.nonZeroSign(f64, msdfgen.Vector2.cross(ep_dir, qa)) * qa.length(); // distance from A
+            var min_distance = util.nonZeroSign(f64, zmsdf.Vector2.cross(ep_dir, qa)) * qa.length(); // distance from A
 
             var alpha = -dot(qa, ep_dir) / dot(ep_dir, ep_dir);
             {
@@ -248,7 +248,7 @@ pub fn signedDistance(self: EdgeSegment, origin: msdfgen.Vector2) struct {
                 if (distance < @abs(min_distance)) {
                     min_distance = util.nonZeroSign(
                         f64,
-                        msdfgen.Vector2.cross(ep_dir, self.points[2].subtract(origin)),
+                        zmsdf.Vector2.cross(ep_dir, self.points[2].subtract(origin)),
                     ) * distance;
                     alpha = dot(origin.subtract(self.points[1]), ep_dir) /
                         dot(ep_dir, ep_dir);
@@ -262,7 +262,7 @@ pub fn signedDistance(self: EdgeSegment, origin: msdfgen.Vector2) struct {
                     if (distance <= @abs(min_distance)) {
                         min_distance = util.nonZeroSign(
                             f64,
-                            msdfgen.Vector2.cross(ab.add(br.multiplyByScalar(solution)), qe),
+                            zmsdf.Vector2.cross(ab.add(br.multiplyByScalar(solution)), qe),
                         ) * distance;
                         alpha = solution;
                     }
@@ -295,7 +295,7 @@ pub fn signedDistance(self: EdgeSegment, origin: msdfgen.Vector2) struct {
             const as = self.points[3].subtract(self.points[2]).subtract(self.points[2].subtract(self.points[1])).subtract(br);
 
             var ep_dir = self.direction(0);
-            var min_distance = util.nonZeroSign(f64, msdfgen.Vector2.cross(ep_dir, qa)) * qa.length(); // distance from A
+            var min_distance = util.nonZeroSign(f64, zmsdf.Vector2.cross(ep_dir, qa)) * qa.length(); // distance from A
             var alpha = -dot(qa, ep_dir) / dot(ep_dir, ep_dir);
             {
                 ep_dir = self.direction(1);
@@ -303,7 +303,7 @@ pub fn signedDistance(self: EdgeSegment, origin: msdfgen.Vector2) struct {
                 if (distance < @abs(min_distance)) {
                     min_distance = util.nonZeroSign(
                         f64,
-                        msdfgen.Vector2.cross(ep_dir, self.points[3].subtract(origin)),
+                        zmsdf.Vector2.cross(ep_dir, self.points[3].subtract(origin)),
                     ) * distance;
                     alpha = dot(ep_dir.subtract(self.points[3].subtract(origin)), ep_dir) / dot(ep_dir, ep_dir);
                 }
@@ -334,7 +334,7 @@ pub fn signedDistance(self: EdgeSegment, origin: msdfgen.Vector2) struct {
                     if (distance < @abs(min_distance)) {
                         min_distance = util.nonZeroSign(
                             f64,
-                            msdfgen.Vector2.cross(d1, qe),
+                            zmsdf.Vector2.cross(d1, qe),
                         ) * distance;
                         alpha = t;
                     }
@@ -364,14 +364,14 @@ pub fn signedDistance(self: EdgeSegment, origin: msdfgen.Vector2) struct {
     }
 }
 
-pub fn scanlineIntersections(self: EdgeSegment, y: f64) std.BoundedArray(msdfgen.Scanline.Intersection, 3) {
+pub fn scanlineIntersections(self: EdgeSegment, y: f64) std.BoundedArray(zmsdf.Scanline.Intersection, 3) {
     switch (self.kind) {
         .linear => {
             if ((y >= self.points[0].y and y < self.points[1].y) or (y >= self.points[1].y and y < self.points[0].y)) {
                 const param = (y - self.points[0].y) / (self.points[1].y - self.points[0].y);
                 const x0 = std.math.lerp(self.points[0].x, self.points[1].x, param);
                 // dy[0] = if (self.points[1].y > self.points[0].y) 1 else -1;
-                const dy_sign: msdfgen.Polarity = .of(self.points[1].y - self.points[0].y);
+                const dy_sign: zmsdf.Polarity = .of(self.points[1].y - self.points[0].y);
                 return .{
                     .buffer = .{
                         .{ .x = x0, .direction = dy_sign.asInt() },
@@ -388,7 +388,7 @@ pub fn scanlineIntersections(self: EdgeSegment, y: f64) std.BoundedArray(msdfgen
             var dy_sign: [3]i32 = @splat(0);
 
             var total: usize = 0;
-            var next_dy_sign: msdfgen.Polarity = .of(y - self.points[0].y);
+            var next_dy_sign: zmsdf.Polarity = .of(y - self.points[0].y);
             x[total] = self.points[0].x;
             if (self.points[0].y == y) {
                 if (self.points[0].y < self.points[1].y or
@@ -439,7 +439,7 @@ pub fn scanlineIntersections(self: EdgeSegment, y: f64) std.BoundedArray(msdfgen
                     }
                 }
             }
-            if (next_dy_sign != msdfgen.Polarity.of(y - self.points[2].y)) {
+            if (next_dy_sign != zmsdf.Polarity.of(y - self.points[2].y)) {
                 if (total > 0) {
                     total -= 1;
                 } else {
@@ -465,7 +465,7 @@ pub fn scanlineIntersections(self: EdgeSegment, y: f64) std.BoundedArray(msdfgen
             var dy_sign: [3]i32 = @splat(0);
 
             var total: usize = 0;
-            var next_dy_sign: msdfgen.Polarity = .of(y - self.points[0].y);
+            var next_dy_sign: zmsdf.Polarity = .of(y - self.points[0].y);
             x[total] = self.points[0].x;
             if (self.points[0].y == y) {
                 if (self.points[0].y < self.points[1].y or
@@ -531,7 +531,7 @@ pub fn scanlineIntersections(self: EdgeSegment, y: f64) std.BoundedArray(msdfgen
                     }
                 }
             }
-            if (next_dy_sign != msdfgen.Polarity.of(y - self.points[3].y)) {
+            if (next_dy_sign != zmsdf.Polarity.of(y - self.points[3].y)) {
                 if (total > 0) {
                     total -= 1;
                 } else {
@@ -556,7 +556,7 @@ pub fn scanlineIntersections(self: EdgeSegment, y: f64) std.BoundedArray(msdfgen
 
 const pointBounds = util.pointBounds;
 
-pub fn bound(self: EdgeSegment, bounds: *msdfgen.Bounds) void {
+pub fn bound(self: EdgeSegment, bounds: *zmsdf.Bounds) void {
     switch (self.kind) {
         .linear => {
             pointBounds(self.points[0], bounds);
@@ -626,7 +626,7 @@ pub fn reverse(self: EdgeSegment) EdgeSegment {
     }
 }
 
-pub fn moveStartPoint(self: EdgeSegment, to: msdfgen.Vector2) EdgeSegment {
+pub fn moveStartPoint(self: EdgeSegment, to: zmsdf.Vector2) EdgeSegment {
     switch (self.kind) {
         .linear => {
             return create2(to, self.points[1], self.color);
@@ -634,8 +634,8 @@ pub fn moveStartPoint(self: EdgeSegment, to: msdfgen.Vector2) EdgeSegment {
         .quadratic => {
             const orig_s_dir = self.points[0].subtract(self.points[1]);
             var p1 = self.points[1];
-            p1 = p1.add((self.points[2].subtract(self.points[1])).multiplyByScalar(msdfgen.Vector2.cross(self.points[0].subtract(self.points[1]), to.subtract(self.points[0])) /
-                msdfgen.Vector2.cross(self.points[0].subtract(self.points[1]), self.points[2].subtract(self.points[1]))));
+            p1 = p1.add((self.points[2].subtract(self.points[1])).multiplyByScalar(zmsdf.Vector2.cross(self.points[0].subtract(self.points[1]), to.subtract(self.points[0])) /
+                zmsdf.Vector2.cross(self.points[0].subtract(self.points[1]), self.points[2].subtract(self.points[1]))));
             if (dot(orig_s_dir, to.subtract(p1)) < 0) {
                 p1 = self.points[1];
             }
@@ -649,7 +649,7 @@ pub fn moveStartPoint(self: EdgeSegment, to: msdfgen.Vector2) EdgeSegment {
     }
 }
 
-pub fn moveEndPoint(self: EdgeSegment, to: msdfgen.Vector2) EdgeSegment {
+pub fn moveEndPoint(self: EdgeSegment, to: zmsdf.Vector2) EdgeSegment {
     switch (self.kind) {
         .linear => {
             return create2(self.points[0], to, self.color);
@@ -657,9 +657,9 @@ pub fn moveEndPoint(self: EdgeSegment, to: msdfgen.Vector2) EdgeSegment {
         .quadratic => {
             const orig_e_dir = self.points[2].subtract(self.points[1]);
             var p1 = self.points[1];
-            p1 = p1.add((to.subtract(self.points[2])).multiplyByScalar(msdfgen.Vector2.cross(orig_e_dir, to.subtract(self.points[1])) /
-                msdfgen.Vector2.cross(orig_e_dir, self.points[0].subtract(self.points[1]))));
-            if (msdfgen.Vector2.dot(orig_e_dir, self.points[2].subtract(p1)) < 0) {
+            p1 = p1.add((to.subtract(self.points[2])).multiplyByScalar(zmsdf.Vector2.cross(orig_e_dir, to.subtract(self.points[1])) /
+                zmsdf.Vector2.cross(orig_e_dir, self.points[0].subtract(self.points[1]))));
+            if (zmsdf.Vector2.dot(orig_e_dir, self.points[2].subtract(p1)) < 0) {
                 p1 = self.points[1];
             }
             return create3(self.points[0], p1, to, self.color);

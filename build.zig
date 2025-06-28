@@ -13,7 +13,7 @@ pub fn build(b: *std.Build) !void {
     const build_example = b.option(bool, "build-example", "Build the example executable") orelse true;
 
     // new rewrite
-    const msdfgen = b.addModule("msdfgen", .{
+    const zmsdf = b.addModule("zmsdf", .{
         .root_source_file = b.path("src/root.zig"),
         .target = target,
         .optimize = optimize,
@@ -29,9 +29,7 @@ pub fn build(b: *std.Build) !void {
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                // .{ .name = "msdfgen", .module = msdfgen },
-                .{ .name = "msdfgen", .module = msdfgen },
-                .{ .name = "msdfgenold", .module = msdfgen },
+                .{ .name = "zmsdf", .module = zmsdf },
                 .{ .name = "stb", .module = ztb_dep.module("zstb") },
             },
         });
@@ -52,7 +50,7 @@ pub fn build(b: *std.Build) !void {
     }
 
     const test_exe = b.addTest(.{
-        .root_module = msdfgen,
+        .root_module = zmsdf,
         .target = target,
         .optimize = optimize,
     });

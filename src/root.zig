@@ -16,10 +16,10 @@ pub const Contour = @import("Contour.zig");
 const contour_combiners = @import("contour_combiners.zig");
 
 pub const SimpleContourCombiner = contour_combiners.SimpleContourCombiner;
-pub const TrueDistanceSimpleContourCombiner = contour_combiners.TrueDistanceSimpleContourCombiner;
-pub const PerpendicularDistanceSimpleContourCombiner = contour_combiners.PerpendicularDistanceSimpleContourCombiner;
-pub const MultiDistanceSimpleContourCombiner = contour_combiners.MultiDistanceSimpleContourCombiner;
-pub const MultiAndTrueDistanceSimpleContourCombiner = contour_combiners.MultiAndTrueDistanceSimpleContourCombiner;
+pub const SimpleTrueDistanceContourCombiner = contour_combiners.SimpleTrueDistanceContourCombiner;
+pub const SimplePerpendicularDistanceContourCombiner = contour_combiners.SimplePerpendicularDistanceContourCombiner;
+pub const SimpleMultiDistanceContourCombiner = contour_combiners.SimpleMultiDistanceContourCombiner;
+pub const SimpleMultiAndTrueDistanceContourCombiner = contour_combiners.SimpleMultiAndTrueDistanceContourCombiner;
 
 pub const OverlappingContourCombiner = contour_combiners.OverlappingContourCombiner;
 pub const OverlappingTrueDistanceContourCombiner = contour_combiners.OverlappingTrueDistanceContourCombiner;
@@ -181,7 +181,3 @@ pub const TrueType = @import("external/TrueType.zig");
 pub const font = @import("import_font.zig");
 
 pub const util = @import("util.zig");
-
-test {
-    try std.testing.expectEqual(10, 9);
-}

@@ -4,18 +4,18 @@
 const Shape = @This();
 
 const std = @import("std");
-const msdfgen = @import("root.zig");
+const zmsdf = @import("root.zig");
 
 pub const corner_dot_epsilon: f64 = 0.000001;
 // moves control points slightly more than necessary to account for floating-point errors
 const deconverge_overshoot: f64 = 1.11111111111111111; // 1 + 1/9
 const corner_dot_epsilon_minus_one: f64 = corner_dot_epsilon - 1;
 
-const Bounds = msdfgen.Bounds;
+const Bounds = zmsdf.Bounds;
 
 allocator: std.mem.Allocator,
 /// The list of contours the shape consists of.
-contours: std.ArrayListUnmanaged(msdfgen.Contour),
+contours: std.ArrayListUnmanaged(zmsdf.Contour),
 /// Specifies whether the shape uses bottom-to-top (false) or top-to-bottom (true) Y coordinates.
 inverse_y_axis: bool,
 
@@ -46,7 +46,7 @@ pub fn validate(self: Shape) bool {
     return true;
 }
 
-fn deconvergeEdge(edge: *msdfgen.EdgeSegment, param: i32, vector: msdfgen.Vector2) void {
+fn deconvergeEdge(edge: *zmsdf.EdgeSegment, param: i32, vector: zmsdf.Vector2) void {
     switch (edge.kind) {
         .quadratic, .cubic => {
             if (edge.kind == .quadratic) {
@@ -79,14 +79,14 @@ pub fn normalize(shape: *Shape) !void {
             for (contour.edges.items) |*edge| {
                 const prev_dir = prev_edge.direction(1.0).normalize(false);
                 const cur_dir = edge.direction(0.0).normalize(false);
-                if (msdfgen.Vector2.dot(prev_dir, cur_dir) < corner_dot_epsilon_minus_one) {
+                if (zmsdf.Vector2.dot(prev_dir, cur_dir) < corner_dot_epsilon_minus_one) {
                     const factor = deconverge_overshoot *
                         @sqrt(1 - (corner_dot_epsilon_minus_one) * (corner_dot_epsilon_minus_one)) / (corner_dot_epsilon_minus_one);
                     var axis = (cur_dir.subtract(prev_dir)).normalize(false).multiplyByScalar(factor);
                     // Determine curve ordering using third-order derivative (t = 0) of
                     // crossProduct((*prevEdge)->point(1-t)-p0, (*edge)->point(t)-p0) where p0 is the corner (*edge)->point(0)
-                    if (msdfgen.Vector2.cross(prev_edge.directionChange(1), edge.direction(0)) +
-                        msdfgen.Vector2.cross(edge.directionChange(0), prev_edge.direction(1)) < 0)
+                    if (zmsdf.Vector2.cross(prev_edge.directionChange(1), edge.direction(0)) +
+                        zmsdf.Vector2.cross(edge.directionChange(0), prev_edge.direction(1)) < 0)
                     {
                         axis = axis.multiplyByScalar(-1);
                     }
@@ -132,8 +132,8 @@ pub fn getBounds(self: Shape, border: f64, miter_limit: f64, polarity: i32) Boun
     return bounds;
 }
 
-pub fn scanline(self: Shape, allocator: std.mem.Allocator, y: f64) !msdfgen.Scanline {
-    var intersections: std.ArrayListUnmanaged(msdfgen.Scanline.Intersection) = .empty;
+pub fn scanline(self: Shape, allocator: std.mem.Allocator, y: f64) !zmsdf.Scanline {
+    var intersections: std.ArrayListUnmanaged(zmsdf.Scanline.Intersection) = .empty;
     errdefer intersections.deinit(allocator);
 
     for (self.contours.items) |contour| {
@@ -156,12 +156,12 @@ pub fn edgeCount(self: Shape) usize {
 }
 
 const ContourAndIntersection = struct {
-    intersection: msdfgen.Scanline.Intersection,
+    intersection: zmsdf.Scanline.Intersection,
     contour_index: usize,
 };
 
 pub fn compareContourIntersections(_: void, a: ContourAndIntersection, b: ContourAndIntersection) bool {
-    return msdfgen.Scanline.compareIntersections({}, a.intersection, b.intersection);
+    return zmsdf.Scanline.compareIntersections({}, a.intersection, b.intersection);
 }
 
 /// any memory allocated here is temporary and will be freed after the function returns

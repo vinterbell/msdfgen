@@ -3,14 +3,14 @@
 const SDFTransformation = @This();
 
 const std = @import("std");
-const msdfgen = @import("root.zig");
+const zmsdf = @import("root.zig");
 
-projection: msdfgen.Projection,
-distance_mapping: msdfgen.DistanceMapping,
+projection: zmsdf.Projection,
+distance_mapping: zmsdf.DistanceMapping,
 
 pub fn init(
-    projection: msdfgen.Projection,
-    distance_mapping: msdfgen.DistanceMapping,
+    projection: zmsdf.Projection,
+    distance_mapping: zmsdf.DistanceMapping,
 ) SDFTransformation {
     return .{
         .projection = projection,
@@ -19,22 +19,22 @@ pub fn init(
 }
 
 /// Converts the shape coordinate to pixel coordinate.
-pub fn project(self: SDFTransformation, coord: msdfgen.Vector2) msdfgen.Vector2 {
+pub fn project(self: SDFTransformation, coord: zmsdf.Vector2) zmsdf.Vector2 {
     return self.projection.project(coord);
 }
 
 /// Converts the pixel coordinate to shape coordinate.
-pub fn unproject(self: SDFTransformation, coord: msdfgen.Vector2) msdfgen.Vector2 {
+pub fn unproject(self: SDFTransformation, coord: zmsdf.Vector2) zmsdf.Vector2 {
     return self.projection.unproject(coord);
 }
 
 /// Converts the vector to pixel coordinate space.
-pub fn projectVector(self: SDFTransformation, vector: msdfgen.Vector2) msdfgen.Vector2 {
+pub fn projectVector(self: SDFTransformation, vector: zmsdf.Vector2) zmsdf.Vector2 {
     return self.projection.projectVector(vector);
 }
 
 /// Converts the vector from pixel coordinate space.
-pub fn unprojectVector(self: SDFTransformation, vector: msdfgen.Vector2) msdfgen.Vector2 {
+pub fn unprojectVector(self: SDFTransformation, vector: zmsdf.Vector2) zmsdf.Vector2 {
     return self.projection.unprojectVector(vector);
 }
 

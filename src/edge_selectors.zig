@@ -1,5 +1,5 @@
 const std = @import("std");
-const msdfgen = @import("root.zig");
+const zmsdf = @import("root.zig");
 
 const util = @import("util.zig");
 
@@ -23,8 +23,8 @@ pub const MultiAndTrueDistance = struct {
 pub const distance_delta_factor = 1.001;
 
 pub const TrueDistanceSelector = struct {
-    point: msdfgen.Vector2,
-    min_distance: msdfgen.SignedDistance,
+    point: zmsdf.Vector2,
+    min_distance: zmsdf.SignedDistance,
 
     pub const DistanceType = f64;
 
@@ -34,7 +34,7 @@ pub const TrueDistanceSelector = struct {
     };
 
     pub const EdgeCache = struct {
-        point: msdfgen.Vector2,
+        point: zmsdf.Vector2,
         abs_distance: f64,
 
         pub fn init() EdgeCache {
@@ -42,7 +42,7 @@ pub const TrueDistanceSelector = struct {
         }
     };
 
-    pub fn reset(self: *TrueDistanceSelector, p: msdfgen.Vector2) void {
+    pub fn reset(self: *TrueDistanceSelector, p: zmsdf.Vector2) void {
         const delta = distance_delta_factor * (p.subtract(self.point)).length();
         self.min_distance.distance += util.nonZeroSign(f64, self.min_distance.distance) * delta;
         self.point = p;
@@ -51,9 +51,9 @@ pub const TrueDistanceSelector = struct {
     pub fn addEdge(
         self: *TrueDistanceSelector,
         cache: *EdgeCache,
-        prev_edge: *const msdfgen.EdgeSegment,
-        edge: *msdfgen.EdgeSegment,
-        next_edge: *const msdfgen.EdgeSegment,
+        prev_edge: *const zmsdf.EdgeSegment,
+        edge: *zmsdf.EdgeSegment,
+        next_edge: *const zmsdf.EdgeSegment,
     ) void {
         _ = prev_edge; // Unused
         _ = next_edge; // Unused
@@ -80,14 +80,14 @@ pub const TrueDistanceSelector = struct {
 };
 
 pub const PerpendicularDistanceSelectorBase = struct {
-    min_true_distance: msdfgen.SignedDistance,
+    min_true_distance: zmsdf.SignedDistance,
     min_negative_perpendicular_distance: f64,
     min_positive_perpendicular_distance: f64,
-    near_edge: ?msdfgen.EdgeSegment,
+    near_edge: ?zmsdf.EdgeSegment,
     near_edge_param: f64,
 
     pub const EdgeCache = struct {
-        point: msdfgen.Vector2,
+        point: zmsdf.Vector2,
         abs_distance: f64,
         a_domain_distance: f64,
         b_domain_distance: f64,
@@ -115,12 +115,12 @@ pub const PerpendicularDistanceSelectorBase = struct {
     /// if there is a perpendicular distance to the edge, it will returned
     pub fn getPerpendicularDistance(
         distance: *f64,
-        ep: msdfgen.Vector2,
-        edge_dir: msdfgen.Vector2,
+        ep: zmsdf.Vector2,
+        edge_dir: zmsdf.Vector2,
     ) bool {
-        const ts = msdfgen.Vector2.dot(ep, edge_dir);
+        const ts = zmsdf.Vector2.dot(ep, edge_dir);
         if (ts > 0) {
-            const perpendicular_distance = msdfgen.Vector2.cross(ep, edge_dir);
+            const perpendicular_distance = zmsdf.Vector2.cross(ep, edge_dir);
             if (@abs(perpendicular_distance) < @abs(distance.*)) {
                 distance.* = perpendicular_distance;
                 return true;
@@ -140,8 +140,8 @@ pub const PerpendicularDistanceSelectorBase = struct {
     pub fn isEdgeRelevant(
         self: *PerpendicularDistanceSelectorBase,
         cache: EdgeCache,
-        edge: *const msdfgen.EdgeSegment,
-        p: msdfgen.Vector2,
+        edge: *const zmsdf.EdgeSegment,
+        p: zmsdf.Vector2,
     ) bool {
         _ = edge; // Unused
         const delta = (p.subtract(cache.point).multiplyByScalar(distance_delta_factor)).length();
@@ -160,8 +160,8 @@ pub const PerpendicularDistanceSelectorBase = struct {
 
     pub fn addEdgeTrueDistance(
         self: *PerpendicularDistanceSelectorBase,
-        edge: *const msdfgen.EdgeSegment,
-        distance: msdfgen.SignedDistance,
+        edge: *const zmsdf.EdgeSegment,
+        distance: zmsdf.SignedDistance,
         param: f64,
     ) void {
         if (distance.lessThan(self.min_true_distance)) {
@@ -197,7 +197,7 @@ pub const PerpendicularDistanceSelectorBase = struct {
         }
     }
 
-    pub fn computeDistance(self: PerpendicularDistanceSelectorBase, p: msdfgen.Vector2) f64 {
+    pub fn computeDistance(self: PerpendicularDistanceSelectorBase, p: zmsdf.Vector2) f64 {
         var min_distance = if (self.min_true_distance.distance < 0)
             self.min_negative_perpendicular_distance
         else
@@ -213,14 +213,14 @@ pub const PerpendicularDistanceSelectorBase = struct {
         return min_distance;
     }
 
-    pub fn trueDistance(self: PerpendicularDistanceSelectorBase) msdfgen.SignedDistance {
+    pub fn trueDistance(self: PerpendicularDistanceSelectorBase) zmsdf.SignedDistance {
         return self.min_true_distance;
     }
 };
 
 pub const PerpendicularDistanceSelector = struct {
     base: PerpendicularDistanceSelectorBase,
-    point: msdfgen.Vector2,
+    point: zmsdf.Vector2,
 
     pub const DistanceType = f64;
 
@@ -229,7 +229,7 @@ pub const PerpendicularDistanceSelector = struct {
         .point = .zero,
     };
 
-    pub fn reset(self: *PerpendicularDistanceSelector, p: msdfgen.Vector2) void {
+    pub fn reset(self: *PerpendicularDistanceSelector, p: zmsdf.Vector2) void {
         const delta = (p.subtract(self.point).multiplyByScalar(distance_delta_factor)).length();
         self.base.reset(delta);
         self.point = p;
@@ -238,9 +238,9 @@ pub const PerpendicularDistanceSelector = struct {
     pub fn addEdge(
         self: *PerpendicularDistanceSelector,
         cache: *PerpendicularDistanceSelectorBase.EdgeCache,
-        prev_edge: *const msdfgen.EdgeSegment,
-        edge: *const msdfgen.EdgeSegment,
-        next_edge: *const msdfgen.EdgeSegment,
+        prev_edge: *const zmsdf.EdgeSegment,
+        edge: *const zmsdf.EdgeSegment,
+        next_edge: *const zmsdf.EdgeSegment,
     ) void {
         if (self.base.isEdgeRelevant(cache.*, edge, self.point)) {
             const d = edge.signedDistance(self.point);
@@ -254,8 +254,8 @@ pub const PerpendicularDistanceSelector = struct {
             const b_dir = edge.direction(1).normalize(true);
             const prev_dir = prev_edge.direction(1).normalize(true);
             const next_dir = next_edge.direction(0).normalize(true);
-            const add = msdfgen.Vector2.dot(ap, (prev_dir.add(a_dir)).normalize(true));
-            const bdd = -msdfgen.Vector2.dot(bp, (b_dir.add(next_dir)).normalize(true));
+            const add = zmsdf.Vector2.dot(ap, (prev_dir.add(a_dir)).normalize(true));
+            const bdd = -zmsdf.Vector2.dot(bp, (b_dir.add(next_dir)).normalize(true));
 
             if (add > 0) {
                 var pd = d.distance.distance;
@@ -281,7 +281,7 @@ pub const PerpendicularDistanceSelector = struct {
         return self.base.computeDistance(self.point);
     }
 
-    pub fn trueDistance(self: PerpendicularDistanceSelector) msdfgen.SignedDistance {
+    pub fn trueDistance(self: PerpendicularDistanceSelector) zmsdf.SignedDistance {
         return self.base.trueDistance();
     }
 
@@ -294,7 +294,7 @@ pub const MultiDistanceSelector = struct {
     r: PerpendicularDistanceSelectorBase,
     g: PerpendicularDistanceSelectorBase,
     b: PerpendicularDistanceSelectorBase,
-    point: msdfgen.Vector2,
+    point: zmsdf.Vector2,
 
     pub const DistanceType = MultiDistance;
     pub const EdgeCache = PerpendicularDistanceSelectorBase.EdgeCache;
@@ -306,7 +306,7 @@ pub const MultiDistanceSelector = struct {
         .point = .zero,
     };
 
-    pub fn reset(self: *MultiDistanceSelector, p: msdfgen.Vector2) void {
+    pub fn reset(self: *MultiDistanceSelector, p: zmsdf.Vector2) void {
         const delta = (p.subtract(self.point).multiplyByScalar(distance_delta_factor)).length();
         self.r.reset(delta);
         self.g.reset(delta);
@@ -317,9 +317,9 @@ pub const MultiDistanceSelector = struct {
     pub fn addEdge(
         self: *MultiDistanceSelector,
         cache: *EdgeCache,
-        prev_edge: *const msdfgen.EdgeSegment,
-        edge: *const msdfgen.EdgeSegment,
-        next_edge: *const msdfgen.EdgeSegment,
+        prev_edge: *const zmsdf.EdgeSegment,
+        edge: *const zmsdf.EdgeSegment,
+        next_edge: *const zmsdf.EdgeSegment,
     ) void {
         if ((edge.color.red_channel and self.r.isEdgeRelevant(cache.*, edge, self.point)) or
             (edge.color.green_channel and self.g.isEdgeRelevant(cache.*, edge, self.point)) or
@@ -341,8 +341,8 @@ pub const MultiDistanceSelector = struct {
             const b_dir = edge.direction(1).normalize(true);
             const prev_dir = prev_edge.direction(1).normalize(true);
             const next_dir = next_edge.direction(0).normalize(true);
-            const add = msdfgen.Vector2.dot(ap, (prev_dir.add(a_dir)).normalize(true));
-            const bdd = -msdfgen.Vector2.dot(bp, (b_dir.add(next_dir)).normalize(true));
+            const add = zmsdf.Vector2.dot(ap, (prev_dir.add(a_dir)).normalize(true));
+            const bdd = -zmsdf.Vector2.dot(bp, (b_dir.add(next_dir)).normalize(true));
 
             if (add > 0) {
                 var pd = d.distance.distance;
@@ -388,7 +388,7 @@ pub const MultiDistanceSelector = struct {
         };
     }
 
-    pub fn trueDistance(self: MultiDistanceSelector) msdfgen.SignedDistance {
+    pub fn trueDistance(self: MultiDistanceSelector) zmsdf.SignedDistance {
         var d = self.r.trueDistance();
         if (self.g.trueDistance().lessThan(d))
             d = self.g.trueDistance();
@@ -418,22 +418,22 @@ pub const MultiAndTrueDistanceSelector = struct {
         };
     }
 
-    pub fn reset(self: *MultiAndTrueDistanceSelector, p: msdfgen.Vector2) void {
+    pub fn reset(self: *MultiAndTrueDistanceSelector, p: zmsdf.Vector2) void {
         self.base.reset(p);
     }
     pub fn addEdge(
         self: *MultiAndTrueDistanceSelector,
         cache: *MultiDistanceSelector.EdgeCache,
-        prev_edge: *const msdfgen.EdgeSegment,
-        edge: *const msdfgen.EdgeSegment,
-        next_edge: *const msdfgen.EdgeSegment,
+        prev_edge: *const zmsdf.EdgeSegment,
+        edge: *const zmsdf.EdgeSegment,
+        next_edge: *const zmsdf.EdgeSegment,
     ) void {
         self.base.addEdge(cache, prev_edge, edge, next_edge);
     }
     pub fn merge(self: *MultiAndTrueDistanceSelector, other: MultiAndTrueDistanceSelector) void {
         self.base.merge(other.base);
     }
-    pub fn trueDistance(self: MultiAndTrueDistanceSelector) msdfgen.SignedDistance {
+    pub fn trueDistance(self: MultiAndTrueDistanceSelector) zmsdf.SignedDistance {
         return self.base.trueDistance();
     }
 };

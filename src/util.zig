@@ -1,12 +1,12 @@
 const std = @import("std");
-const msdfgen = @import("root.zig");
+const zmsdf = @import("root.zig");
 
 pub fn interpolate(
     comptime T: type,
     comptime Channels: u8,
     output: []T,
-    bitmap: msdfgen.BitmapConstRef(T, Channels),
-    pos: msdfgen.Vector2,
+    bitmap: zmsdf.BitmapConstRef(T, Channels),
+    pos: zmsdf.Vector2,
 ) void {
     const p = pos.subtract(.init(0.5, 0.5));
     const l: i32 = @intFromFloat(@floor(p.x));
@@ -55,7 +55,7 @@ pub fn nonZeroSign(
     }
 }
 
-pub fn pointBounds(p: msdfgen.Vector2, bounds: *msdfgen.Bounds) void {
+pub fn pointBounds(p: zmsdf.Vector2, bounds: *zmsdf.Bounds) void {
     if (p.x < bounds.left) bounds.left = p.x;
     if (p.y < bounds.bottom) bounds.bottom = p.y;
     if (p.x > bounds.right) bounds.right = p.x;
@@ -66,7 +66,7 @@ pub fn median(comptime T: type, a: T, b: T, c: T) T {
     return @max(@min(a, b), @min(@max(a, b), c));
 }
 
-pub fn polarity(x: anytype) msdfgen.Polarity {
+pub fn polarity(x: anytype) zmsdf.Polarity {
     const result = std.math.sign(x);
     if (result > 0) {
         return .pos;

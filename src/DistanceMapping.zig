@@ -1,12 +1,12 @@
 //! Linear transformation of signed distance values.
 const DistanceMapping = @This();
 
-const msdfgen = @import("root.zig");
+const zmsdf = @import("root.zig");
 
 scale: f64,
 translate: f64,
 
-pub fn inverseRange(range: msdfgen.Range) DistanceMapping {
+pub fn inverseRange(range: zmsdf.Range) DistanceMapping {
     const range_width = range.upper - range.lower;
     return .{
         .scale = range_width,
@@ -14,7 +14,7 @@ pub fn inverseRange(range: msdfgen.Range) DistanceMapping {
     };
 }
 
-pub fn fromRange(range: msdfgen.Range) DistanceMapping {
+pub fn fromRange(range: zmsdf.Range) DistanceMapping {
     return .{
         .scale = 1.0 / (range.upper - range.lower),
         .translate = -range.lower,

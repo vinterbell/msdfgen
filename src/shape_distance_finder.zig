@@ -1,5 +1,5 @@
 const std = @import("std");
-const msdfgen = @import("root.zig");
+const zmsdf = @import("root.zig");
 
 /// Finds the distance between a point and a Shape. ContourCombiner dictates the distance metric and its data type.
 pub fn ShapeDistanceFinder(
@@ -7,7 +7,7 @@ pub fn ShapeDistanceFinder(
 ) type {
     return struct {
         allocator: std.mem.Allocator,
-        shape: *const msdfgen.Shape,
+        shape: *const zmsdf.Shape,
         combiner: ContourCombiner,
         shape_edge_cache: []ContourCombiner.EdgeSelectorType.EdgeCache,
 
@@ -15,7 +15,7 @@ pub fn ShapeDistanceFinder(
         pub const DistanceType = ContourCombiner.DistanceType;
 
         /// Passed shape object must persist until the distance finder is destroyed!
-        pub fn init(allocator: std.mem.Allocator, shape: *const msdfgen.Shape) !Self {
+        pub fn init(allocator: std.mem.Allocator, shape: *const zmsdf.Shape) !Self {
             const shape_edge_cache = try allocator.alloc(ContourCombiner.EdgeSelectorType.EdgeCache, shape.edgeCount());
             return .{
                 .allocator = allocator,
@@ -31,7 +31,7 @@ pub fn ShapeDistanceFinder(
         }
 
         /// Finds the distance from origin. Not thread-safe! Is fastest when subsequent queries are close together.
-        pub fn distance(self: *Self, origin: msdfgen.Vector2) DistanceType {
+        pub fn distance(self: *Self, origin: zmsdf.Vector2) DistanceType {
             self.combiner.reset(origin);
             var edge_cache = self.shape_edge_cache;
 
@@ -39,11 +39,11 @@ pub fn ShapeDistanceFinder(
                 if (contour.edges.items.len > 0) {
                     const edge_selector = self.combiner.edgeSelector(i);
 
-                    var prev_edge: *const msdfgen.EdgeSegment = if (contour.edges.items.len >= 2)
+                    var prev_edge: *const zmsdf.EdgeSegment = if (contour.edges.items.len >= 2)
                         &contour.edges.items[contour.edges.items.len - 2]
                     else
                         &contour.edges.items[0];
-                    var cur_edge: *const msdfgen.EdgeSegment = &contour.edges.items[contour.edges.items.len - 1];
+                    var cur_edge: *const zmsdf.EdgeSegment = &contour.edges.items[contour.edges.items.len - 1];
                     for (0..contour.edges.items.len) |edge_index| {
                         const next_edge = &contour.edges.items[edge_index];
                         edge_selector.addEdge(&edge_cache[0], prev_edge, cur_edge, next_edge);
@@ -58,6 +58,6 @@ pub fn ShapeDistanceFinder(
         }
 
         // / Finds the distance between shape and origin. Does not allocate result cache used to optimize performance of multiple queries.
-        // pub fn oneShotDistance(shape: *const msdfgen.Shape, origin: msdfgen.Vector2) DistanceType {}
+        // pub fn oneShotDistance(shape: *const zmsdf.Shape, origin: zmsdf.Vector2) DistanceType {}
     };
 }
