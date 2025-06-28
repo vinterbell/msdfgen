@@ -105,8 +105,8 @@ pub const PerpendicularDistanceSelectorBase = struct {
     };
 
     pub const init: PerpendicularDistanceSelectorBase = .{
-        .min_negative_perpendicular_distance = std.math.floatMin(f64),
-        .min_positive_perpendicular_distance = std.math.floatMax(f64),
+        .min_negative_perpendicular_distance = util.f64_min,
+        .min_positive_perpendicular_distance = util.f64_max,
         .min_true_distance = .zero,
         .near_edge = null,
         .near_edge_param = 0,

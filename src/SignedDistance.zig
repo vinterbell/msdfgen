@@ -4,6 +4,8 @@ const SignedDistance = @This();
 const std = @import("std");
 const msdfgen = @import("root.zig");
 
+const util = @import("util.zig");
+
 distance: f64,
 dot: f64,
 
@@ -12,7 +14,7 @@ pub fn init(distance: f64, dot: f64) SignedDistance {
 }
 
 pub const zero: SignedDistance = .{
-    .distance = std.math.floatMin(f64),
+    .distance = util.f64_min,
     .dot = 0,
 };
 

@@ -60,14 +60,6 @@ fn readTrueTypeOutline(
             contour_start_ends[ci].@"0" = i;
         }
     }
-    std.debug.print("Found {} contours in the outline\n", .{contour_count});
-    for (0..contour_count) |i| {
-        std.debug.print("Contour {}: start {}, end {}\n", .{
-            i,
-            contour_start_ends[i].@"0",
-            contour_start_ends[i].@"1",
-        });
-    }
 
     for (0..contour_count) |contour_index| {
         var contour: msdfgen.Contour = .init(shape.allocator);
@@ -127,7 +119,7 @@ pub fn loadGlyph(
     glyph_index: TrueType.GlyphIndex,
     scaling: FontCoordinateScaling,
 ) !void {
-    shape.inverse_y_axis = true;
+    shape.inverse_y_axis = false;
     var arena: std.heap.ArenaAllocator = .init(temp);
     defer arena.deinit();
 

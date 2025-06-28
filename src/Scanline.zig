@@ -16,7 +16,7 @@ pub const Intersection = struct {
     direction: i32,
 
     pub const invalid: Intersection = .{
-        .x = std.math.floatMin(f64),
+        .x = util.f64_min,
         .direction = 0,
     };
 };

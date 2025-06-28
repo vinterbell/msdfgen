@@ -76,3 +76,6 @@ pub fn polarity(x: anytype) msdfgen.Polarity {
         return .zero;
     }
 }
+
+pub const f64_max = std.math.floatMax(f64);
+pub const f64_min = -std.math.floatMax(f64);

@@ -176,7 +176,7 @@ pub const OverlappingMultiDistanceContourCombiner = OverlappingContourCombiner(m
 pub const OverlappingMultiAndTrueDistanceContourCombiner = OverlappingContourCombiner(msdfgen.MultiAndTrueDistanceSelector);
 
 fn initDistanceFloat(distance: *f64) void {
-    distance.* = std.math.floatMin(f64);
+    distance.* = util.f64_min;
 }
 
 fn initDistanceMulti(distance: *msdfgen.MultiDistance) void {

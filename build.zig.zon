@@ -28,7 +28,7 @@
 
     // Tracks the earliest Zig version that the package considers to be a
     // supported use case.
-    .minimum_zig_version = "0.15.0-dev.666+c04be630d",
+    .minimum_zig_version = "0.15.0-dev.869+640a13065",
 
     // This field is optional.
     // Each dependency must either provide a `url` and `hash`, or a `path`.
@@ -43,6 +43,7 @@
         .stb = .{
             .url = "git+https://github.com/vinterbell/stb#f59cfa2665f9449fcb7d109d1a8ee138629f3663",
             .hash = "stb-0.1.0-KjHKnGpKEABuDu1Ef6HGGEsJvm-8VTO7yRx5poebMtUE",
+            .lazy = true, // This dependency is lazy, meaning it is not required to build the package.
         },
     },
     .paths = .{

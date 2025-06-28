@@ -44,8 +44,8 @@ pub fn ShapeDistanceFinder(
                     else
                         &contour.edges.items[0];
                     var cur_edge: *const msdfgen.EdgeSegment = &contour.edges.items[contour.edges.items.len - 1];
-                    for (contour.edges.items) |edge| {
-                        const next_edge = &edge;
+                    for (0..contour.edges.items.len) |edge_index| {
+                        const next_edge = &contour.edges.items[edge_index];
                         edge_selector.addEdge(&edge_cache[0], prev_edge, cur_edge, next_edge);
                         edge_cache = edge_cache[1..];
                         prev_edge = cur_edge;
